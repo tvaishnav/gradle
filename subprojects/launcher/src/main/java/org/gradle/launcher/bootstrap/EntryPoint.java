@@ -15,6 +15,7 @@
  */
 package org.gradle.launcher.bootstrap;
 
+import org.gradle.api.internal.DocumentationRegistry;
 import org.gradle.internal.buildevents.BuildExceptionReporter;
 import org.gradle.api.Action;
 import org.gradle.configuration.GradleLauncherMetaData;
@@ -62,7 +63,7 @@ public abstract class EntryPoint {
     }
 
     protected Action<Throwable> createErrorHandler() {
-        return new BuildExceptionReporter(new StreamingStyledTextOutputFactory(System.err), new DefaultLoggingConfiguration(), new GradleLauncherMetaData());
+        return new BuildExceptionReporter(new StreamingStyledTextOutputFactory(System.err), new DefaultLoggingConfiguration(), new GradleLauncherMetaData(), new DocumentationRegistry());
     }
 
     protected abstract void doAction(String[] args, ExecutionListener listener);

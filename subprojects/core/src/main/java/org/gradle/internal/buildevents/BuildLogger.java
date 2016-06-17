@@ -21,6 +21,7 @@ import org.gradle.StartParameter;
 import org.gradle.api.execution.TaskExecutionGraph;
 import org.gradle.api.execution.TaskExecutionGraphListener;
 import org.gradle.api.initialization.Settings;
+import org.gradle.api.internal.DocumentationRegistry;
 import org.gradle.api.internal.SettingsInternal;
 import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.invocation.Gradle;
@@ -40,7 +41,7 @@ public class BuildLogger implements BuildListener, TaskExecutionGraphListener {
 
     public BuildLogger(Logger logger, StyledTextOutputFactory textOutputFactory, StartParameter startParameter, BuildRequestMetaData requestMetaData) {
         this.logger = logger;
-        resultLoggers.add(new BuildExceptionReporter(textOutputFactory, startParameter, requestMetaData.getClient()));
+        resultLoggers.add(new BuildExceptionReporter(textOutputFactory, startParameter, requestMetaData.getClient(), new DocumentationRegistry()));
         resultLoggers.add(new BuildResultLogger(textOutputFactory, requestMetaData.getBuildTimeClock()));
     }
 

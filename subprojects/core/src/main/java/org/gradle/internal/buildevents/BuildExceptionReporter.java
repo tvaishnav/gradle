@@ -15,9 +15,12 @@
  */
 package org.gradle.internal.buildevents;
 
+import groovy.lang.MissingMethodException;
+import groovy.lang.MissingPropertyException;
 import org.gradle.BuildAdapter;
 import org.gradle.BuildResult;
 import org.gradle.api.Action;
+import org.gradle.api.internal.DocumentationRegistry;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.configuration.LoggingConfiguration;
 import org.gradle.api.logging.configuration.ShowStacktrace;
@@ -48,11 +51,13 @@ public class BuildExceptionReporter extends BuildAdapter implements Action<Throw
     private final StyledTextOutputFactory textOutputFactory;
     private final LoggingConfiguration loggingConfiguration;
     private final BuildClientMetaData clientMetaData;
+    private final DocumentationRegistry registry;
 
-    public BuildExceptionReporter(StyledTextOutputFactory textOutputFactory, LoggingConfiguration loggingConfiguration, BuildClientMetaData clientMetaData) {
+    public BuildExceptionReporter(StyledTextOutputFactory textOutputFactory, LoggingConfiguration loggingConfiguration, BuildClientMetaData clientMetaData, DocumentationRegistry registry) {
         this.textOutputFactory = textOutputFactory;
         this.loggingConfiguration = loggingConfiguration;
         this.clientMetaData = clientMetaData;
+        this.registry = registry;
     }
 
     public void buildFinished(BuildResult result) {
@@ -196,6 +201,20 @@ public class BuildExceptionReporter extends BuildAdapter implements Action<Throw
             details.resolution.withStyle(UserInput).format("--%s", LoggingCommandLineConverter.DEBUG_LONG);
             details.resolution.text(" option to get more log output.");
         }
+
+        details.resolution.println();
+        details.resolution.println();
+        Throwable current = details.failure;
+        while (current != null) {
+            addDocumentationLinkForFailure(details.resolution, current);
+            current = current.getCause();
+        }
+        details.resolution.text("Visit the User Guide for more information about using Gradle");
+        details.resolution.append(": ").println().withStyle(Info).text("> ");
+        details.resolution.append(registry.getDocumentationFor("userguide")).println();
+        details.resolution.text("Ask a question on the forums");
+        details.resolution.append(": ").println().withStyle(Info).text("> ");
+        details.resolution.append(registry.getForumsFor("help-discuss")).println();
     }
 
     private String getMessage(Throwable throwable) {
@@ -204,6 +223,27 @@ public class BuildExceptionReporter extends BuildAdapter implements Action<Throw
             return message;
         }
         return String.format("%s (no error message)", throwable.getClass().getName());
+    }
+
+    private void addDocumentationLinkForFailure(BufferingStyledTextOutput resolution, Throwable throwable) {
+        if (throwable instanceof MissingMethodException) {
+            MissingMethodException methodException = (MissingMethodException)throwable;
+            if (methodException.getType()!=null) {
+                resolution.text("See the DSL guide for the list of methods for ");
+                resolution.withStyle(Identifier).append(methodException.getType().getCanonicalName());
+                resolution.append(": ").println().withStyle(Info).text("> ");
+                resolution.append(registry.getDslRefForType(methodException.getType())).println();
+            }
+        }
+        if (throwable instanceof MissingPropertyException) {
+            MissingPropertyException propertyException = (MissingPropertyException)throwable;
+            if (propertyException.getType()!=null) {
+                resolution.text("See the DSL guide for the list of properties for ");
+                resolution.withStyle(Identifier).append(propertyException.getType().getCanonicalName());
+                resolution.append(": ").println().withStyle(Info).text("> ");
+                resolution.append(registry.getDslRefForType(propertyException.getType())).println();
+            }
+        }
     }
 
     private void writeFailureDetails(StyledTextOutput output, FailureDetails details) {

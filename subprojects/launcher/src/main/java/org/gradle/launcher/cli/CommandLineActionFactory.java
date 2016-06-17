@@ -17,6 +17,7 @@ package org.gradle.launcher.cli;
 
 import groovy.lang.GroovySystem;
 import org.apache.tools.ant.Main;
+import org.gradle.api.internal.DocumentationRegistry;
 import org.gradle.api.internal.file.IdentityFileResolver;
 import org.gradle.internal.buildevents.BuildExceptionReporter;
 import org.gradle.api.Action;
@@ -72,7 +73,7 @@ public class CommandLineActionFactory {
                 new ExceptionReportingAction(
                         new JavaRuntimeValidationAction(
                                 new ParseAndBuildAction(loggingServices, args)),
-                        new BuildExceptionReporter(loggingServices.get(StyledTextOutputFactory.class), loggingConfiguration, clientMetaData())));
+                        new BuildExceptionReporter(loggingServices.get(StyledTextOutputFactory.class), loggingConfiguration, clientMetaData(), new DocumentationRegistry())));
     }
 
     protected void createActionFactories(ServiceRegistry loggingServices, Collection<CommandLineAction> actions) {

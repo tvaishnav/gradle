@@ -39,9 +39,18 @@ public class DocumentationRegistry {
         return String.format("https://docs.gradle.org/%s/userguide/%s.html#%s", gradleVersion.getVersion(), id, section);
     }
 
+    public String getDslRefForType(Class<?> clazz) {
+        String className = clazz.getName();
+        return String.format("https://docs.gradle.org/%s/dsl/%s.html#%s", gradleVersion.getVersion(), className, className);
+    }
+
     public String getDslRefForProperty(Class<?> clazz, String property) {
         String className = clazz.getName();
         return String.format("https://docs.gradle.org/%s/dsl/%s.html#%s:%s", gradleVersion.getVersion(), className, className, property);
+    }
+
+    public String getForumsFor(String category) {
+        return String.format("https://discuss.gradle.org/c/%s", category);
     }
 
 }

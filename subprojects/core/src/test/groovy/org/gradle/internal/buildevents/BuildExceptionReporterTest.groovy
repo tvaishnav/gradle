@@ -18,6 +18,7 @@ package org.gradle.internal.buildevents
 
 import org.gradle.BuildResult
 import org.gradle.api.GradleException
+import org.gradle.api.internal.DocumentationRegistry
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.configuration.LoggingConfiguration
 import org.gradle.api.logging.configuration.ShowStacktrace
@@ -36,7 +37,7 @@ class BuildExceptionReporterTest extends Specification {
     final StyledTextOutputFactory factory = Mock()
     final BuildClientMetaData clientMetaData = Mock()
     final LoggingConfiguration configuration = new DefaultLoggingConfiguration()
-    final BuildExceptionReporter reporter = new BuildExceptionReporter(factory, configuration, clientMetaData)
+    final BuildExceptionReporter reporter = new BuildExceptionReporter(factory, configuration, clientMetaData, new DocumentationRegistry())
 
     def setup() {
         factory.create(BuildExceptionReporter.class, LogLevel.ERROR) >> output
