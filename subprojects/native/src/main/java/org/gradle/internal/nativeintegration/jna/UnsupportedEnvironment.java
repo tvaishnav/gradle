@@ -74,6 +74,11 @@ public class UnsupportedEnvironment implements ProcessEnvironment {
         return null;
     }
 
+    @Override
+    public Long detach() {
+        throw notSupported();
+    }
+
     private NativeIntegrationException notSupported() {
         return new NativeIntegrationUnavailableException("We don't support this operating system: " + OperatingSystem.current());
     }

@@ -100,4 +100,9 @@ public interface ProcessEnvironment {
      * Returns the OS level PID for the current process, or null if not available.
      */
     Long maybeGetPid();
+
+    /**
+     * Detach this process from the parent to avoid ctrl-c signals
+     */
+    Long detach();
 }

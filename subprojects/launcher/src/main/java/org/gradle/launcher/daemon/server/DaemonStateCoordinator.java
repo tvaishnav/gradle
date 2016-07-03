@@ -188,7 +188,7 @@ public class DaemonStateCoordinator implements Stoppable, DaemonStateControl {
     private void updateCancellationToken() {
         cancellationToken = new DefaultBuildCancellationToken();
     }
-    
+
     public void initiateCancel() {
         try {
             cancellationToken.cancel();

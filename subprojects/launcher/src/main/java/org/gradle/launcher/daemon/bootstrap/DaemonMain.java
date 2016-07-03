@@ -24,6 +24,7 @@ import org.gradle.internal.TrueTimeProvider;
 import org.gradle.internal.classpath.DefaultClassPath;
 import org.gradle.internal.logging.LoggingManagerInternal;
 import org.gradle.internal.logging.services.LoggingServiceRegistry;
+import org.gradle.internal.nativeintegration.ProcessEnvironment;
 import org.gradle.internal.nativeintegration.services.NativeServices;
 import org.gradle.internal.remote.Address;
 import org.gradle.internal.serialize.kryo.KryoBackedDecoder;
@@ -109,6 +110,10 @@ public class DaemonMain extends EntryPoint {
 
         // Any logging prior to this point will not end up in the daemon log file.
         initialiseLogging(loggingManager, daemonLog);
+
+        // Detach the process from parent to prevent ctrl-c killing the process
+        ProcessEnvironment processEnvironment = daemonServices.get(ProcessEnvironment.class);
+        processEnvironment.detach();
 
         LOGGER.debug("Assuming the daemon was started with following jvm opts: {}", startupOpts);
 
