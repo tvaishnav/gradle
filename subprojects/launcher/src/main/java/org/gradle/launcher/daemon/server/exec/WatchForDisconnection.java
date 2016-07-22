@@ -42,7 +42,6 @@ public class WatchForDisconnection implements DaemonCommandAction {
             public void run() {
                 LOGGER.warn("client disconnection detected, stopping the daemon");
                 execution.getDaemonStateControl().initiateCancel();
-                //listenerBroadcast.getSource().onExpirationEvent(new DaemonExpirationResult(DaemonExpirationStatus.IMMEDIATE_EXPIRE, EXPIRATION_REASON));
             }
         });
 

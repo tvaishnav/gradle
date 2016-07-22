@@ -40,6 +40,10 @@ import org.gradle.internal.remote.internal.Connection;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * The client piece of the build daemon.
@@ -86,6 +90,8 @@ public class DaemonClient implements BuildActionExecuter<BuildActionParameters> 
     private final ExecutorFactory executorFactory;
     private final IdGenerator<?> idGenerator;
 
+    private final CountDownLatch buildCompleted = new CountDownLatch(1);
+
     //TODO - outputEventListener and buildStandardInput are per-build settings
     //so down the road we should refactor the code accordingly and potentially attach them to BuildActionParameters
     public DaemonClient(DaemonConnector connector, OutputEventListener outputEventListener, ExplainingSpec<DaemonContext> compatibilitySpec,
@@ -129,6 +135,7 @@ public class DaemonClient implements BuildActionExecuter<BuildActionParameters> 
                 accumulatedExceptions.add(e);
             } finally {
                 connection.stop();
+                buildCompleted.countDown();
             }
         }
 
@@ -137,7 +144,7 @@ public class DaemonClient implements BuildActionExecuter<BuildActionParameters> 
                 + parameters + ".", accumulatedExceptions);
     }
 
-    protected Object executeBuild(Build build, DaemonClientConnection connection, BuildCancellationToken cancellationToken, BuildEventConsumer buildEventConsumer) throws DaemonInitialConnectException {
+    protected Object executeBuild(Build build, DaemonClientConnection connection, final BuildCancellationToken cancellationToken, BuildEventConsumer buildEventConsumer) throws DaemonInitialConnectException {
         Object result;
         try {
             LOGGER.info("Connected to daemon {}. Dispatching request {}.", connection.getDaemon(), build);
@@ -158,6 +165,18 @@ public class DaemonClient implements BuildActionExecuter<BuildActionParameters> 
 
         DaemonDiagnostics diagnostics = null;
         if (result instanceof BuildStarted) {
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    LOGGER.warn("Shutdown signal received - attempting to cancel the build...");
+                    cancellationToken.cancel();
+                    try {
+                        buildCompleted.await();
+                    } catch (InterruptedException e) {
+                        UncheckedException.throwAsUncheckedException(e);
+                    }
+                }
+            }));
             diagnostics = ((BuildStarted) result).getDiagnostics();
             result = monitorBuild(build, diagnostics, connection, cancellationToken, buildEventConsumer);
         }
@@ -169,7 +188,7 @@ public class DaemonClient implements BuildActionExecuter<BuildActionParameters> 
         if (result instanceof Failure) {
             Throwable failure = ((Failure) result).getValue();
             if (failure instanceof DaemonStoppedException && cancellationToken.isCancellationRequested()) {
-                LOGGER.error("Daemon was stopped to handle build cancel request.");
+                LOGGER.error("\nThe attempt to cancel the build took too long and the daemon was stopped instead.");
                 throw new BuildCancelledException();
             }
             throw UncheckedException.throwAsUncheckedException(failure);
