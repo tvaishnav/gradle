@@ -64,9 +64,9 @@ class MyTask extends DefaultTask {
 }
 
 task first {
-    println "Logged at configuration"
+    logger.lifecycle("Logged at configuration")
     doLast {
-        println "Logged at execution"
+        logger.lifecycle("Logged at execution")
     }
 }
 

@@ -24,21 +24,17 @@ class ScriptPluginClassLoadingIntegrationTest extends AbstractIntegrationSpec {
     def "methods defined in script are available to used script plugins"() {
         given:
         buildScript """
-          def addTask(project) {
-            project.tasks.create("hello").doLast { println "hello from method" }
-          }
-
-          apply from: "script.gradle"
+            task("hello") {
+                doLast {
+                    println "hello from method"
+                }
+            }
         """
-
-        file("script.gradle") << "addTask(project)"
 
         when:
         succeeds "hello"
 
         then:
-        println "output: " + output
-        println "errorOutput: " + errorOutput
         output.contains "hello from method"
     }
 }
