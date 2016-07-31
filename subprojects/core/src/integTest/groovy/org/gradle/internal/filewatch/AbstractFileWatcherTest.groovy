@@ -19,8 +19,6 @@ package org.gradle.internal.filewatch
 import org.gradle.api.Action
 import org.gradle.api.internal.file.FileSystemSubset
 import org.gradle.integtests.fixtures.AbstractIntegrationSpec
-import org.gradle.internal.logging.ConfigureLogging
-import org.gradle.internal.logging.events.LogEvent
 import org.gradle.internal.os.OperatingSystem
 import org.gradle.test.fixtures.ConcurrentTestUtil
 import org.gradle.test.fixtures.file.TestNameTestDirectoryProvider
@@ -33,13 +31,13 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
 abstract class AbstractFileWatcherTest extends AbstractIntegrationSpec {
-    @Rule
-    ConfigureLogging logging = new ConfigureLogging({
-        if (it instanceof LogEvent) {
-            println "[${it.timestamp}] ${it}"
-            it.throwable?.printStackTrace()
-        }
-    })
+//    @Rule
+//    ConfigureLogging logging = new ConfigureLogging({
+//        if (it instanceof LogEvent) {
+//            println "[${it.timestamp}] ${it}"
+//            it.throwable?.printStackTrace()
+//        }
+//    })
 
     @Rule
     public final TestNameTestDirectoryProvider testDir = new TestNameTestDirectoryProvider();

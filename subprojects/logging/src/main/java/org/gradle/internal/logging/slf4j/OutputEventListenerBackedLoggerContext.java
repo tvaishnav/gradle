@@ -63,6 +63,7 @@ public class OutputEventListenerBackedLoggerContext implements ILoggerFactory {
     }
 
     public void setOutputEventListener(OutputEventListener outputEventListener) {
+        System.out.println("Setting output event listener: " + outputEventListener);
         this.outputEventListener.set(outputEventListener);
     }
 
