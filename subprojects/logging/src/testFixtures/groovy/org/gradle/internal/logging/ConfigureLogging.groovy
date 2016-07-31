@@ -47,6 +47,12 @@ class ConfigureLogging extends ExternalResource {
     public void attachListener() {
         originalListener = context.outputEventListener
 
+        if (originalListener != null) {
+            println "Replacing OutputEventListener for the duration of the test. Keep for reset: " + originalListener
+        } else {
+            println "No previous OutputEventListener found."
+        }
+
         context.outputEventListener = listener
         context.level = LogLevel.DEBUG
     }
@@ -61,7 +67,8 @@ class ConfigureLogging extends ExternalResource {
         context.reset()
         LogManager.getLogManager().reset()
 
-        if (originalListener == null) {
+        if (originalListener != null) {
+            println "Reinstating OutputEventListener: " + originalListener
             context.outputEventListener = originalListener
         }
     }
