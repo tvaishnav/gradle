@@ -37,6 +37,8 @@ class ScriptPluginClassLoadingIntegrationTest extends AbstractIntegrationSpec {
         succeeds "hello"
 
         then:
+        println "output: " + output
+        println "errorOutput: " + errorOutput
         output.contains "hello from method"
     }
 }

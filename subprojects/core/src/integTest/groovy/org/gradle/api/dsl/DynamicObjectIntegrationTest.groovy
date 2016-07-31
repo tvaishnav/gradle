@@ -70,6 +70,9 @@ task print(type: MyTask) {
 
         expect:
         succeeds("print")
+
+        println "output: " + output
+        println "errorOutput: " + errorOutput
         result.output.contains("transform(Class)")
     }
 }
