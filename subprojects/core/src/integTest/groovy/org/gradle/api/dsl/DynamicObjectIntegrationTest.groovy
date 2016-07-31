@@ -63,16 +63,27 @@ class MyTask extends DefaultTask {
     }
 }
 
+task first {
+    println "Logged at configuration"
+    doLast {
+        println "Logged at execution"
+    }
+}
+
 task print(type: MyTask) {
     transform(Impl) // should call transform(Class)
 }
         """
 
         expect:
-        succeeds("print")
+        succeeds("first", "print")
 
-        println "output: " + output
-        println "errorOutput: " + errorOutput
+        println """
+output:
+------
+$result.output
+------
+"""
         result.output.contains("transform(Class)")
     }
 }

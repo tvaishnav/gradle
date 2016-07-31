@@ -39,6 +39,7 @@ class ConfigureLogging extends ExternalResource {
 
     @Override
     protected void before() {
+        println "About to configure logging!"
         attachListener()
     }
 
@@ -49,6 +50,7 @@ class ConfigureLogging extends ExternalResource {
 
     @Override
     protected void after() {
+        println "About to reset logging"
         resetLogging()
     }
 
