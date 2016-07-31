@@ -47,8 +47,6 @@ class ConfigureLogging extends ExternalResource {
     public void attachListener() {
         originalListener = context.outputEventListener
 
-        println "Got original listener attached: " + originalListener
-
         context.outputEventListener = listener
         context.level = LogLevel.DEBUG
     }
@@ -64,7 +62,6 @@ class ConfigureLogging extends ExternalResource {
         LogManager.getLogManager().reset()
 
         if (originalListener == null) {
-            println "Reinstating original OutputEventListener: " + originalListener
             context.outputEventListener = originalListener
         }
     }
