@@ -34,8 +34,8 @@ public class ClassChangeProcessor {
     }
 
     public void processChange(final InputFileDetails input, final RecompilationSpec spec) {
-        // Do not process
         if (input.isRemoved()) {
+            spec.setFullRebuildCause("class from upstream classpath was deleted", input.getFile());
             return;
         }
 

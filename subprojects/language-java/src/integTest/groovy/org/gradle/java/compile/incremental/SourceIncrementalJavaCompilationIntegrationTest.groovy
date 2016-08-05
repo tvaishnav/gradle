@@ -335,6 +335,26 @@ sourceSets {
         outputs.recompiledClasses("Other", "Main")
     }
 
+    def "removed sources from upstream classpath forces full recompilation"() {
+        buildFile << """
+compileTestJava.options.incremental = true
+"""
+
+        def aClass = java("public class A {}")
+        // Need another class or :compileJava will always be considered UP-TO-DATE
+        java("public class B {}")
+
+        file("src/test/java/ATest.java") << "public class ATest { A a; }"
+
+        outputs.snapshot { run "compileTestJava" }
+
+        when:
+        aClass.delete()
+
+        then:
+        fails "compileTestJava"
+    }
+
     def "recompilation does not process removed classes from dependent sourceSet"() {
         buildFile << """
 compileTestJava.options.incremental = true
