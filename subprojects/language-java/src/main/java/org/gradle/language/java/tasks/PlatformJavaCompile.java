@@ -16,6 +16,7 @@
 
 package org.gradle.language.java.tasks;
 
+import com.google.common.base.Preconditions;
 import org.gradle.api.Incubating;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.jvm.platform.JavaPlatform;
@@ -27,13 +28,11 @@ import org.gradle.jvm.platform.JavaPlatform;
 public class PlatformJavaCompile extends JavaCompile {
     private JavaPlatform platform;
 
-    // TODO:LPTR This should be @Nested
-    @Override
     public JavaPlatform getPlatform() {
         return platform;
     }
 
     public void setPlatform(JavaPlatform platform) {
-        this.platform = platform;
+        this.platform = Preconditions.checkNotNull(platform);
     }
 }
