@@ -15,6 +15,8 @@
  */
 package org.gradle.api;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -81,7 +83,8 @@ public enum JavaVersion {
     }
 
     // For testing current() method
-    static void resetCurrent() {
+    @VisibleForTesting
+    public static void resetCurrent() {
         currentJavaVersion = null;
     }
 

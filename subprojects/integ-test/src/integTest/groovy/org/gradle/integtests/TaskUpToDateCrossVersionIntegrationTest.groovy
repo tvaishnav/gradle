@@ -15,6 +15,7 @@
  */
 package org.gradle.integtests
 
+import org.gradle.api.JavaVersion
 import org.gradle.integtests.fixtures.CrossVersionIntegrationSpec
 
 class TaskUpToDateCrossVersionIntegrationTest extends CrossVersionIntegrationSpec {
@@ -36,5 +37,35 @@ class Person { }
 
         version current withTasks 'compileJava' run() assertTaskNotSkipped(":compileJava")
         version current withTasks 'compileJava' run() assertTaskSkipped(":compileJava")
+    }
+
+    public void "Compile Java task is not up-to-date when Java verison changes"() {
+        given:
+        buildFile << """
+apply plugin: 'java'
+        """
+
+        and:
+        file('src/main/java/org/gradle/Person.java') << """
+package org.gradle;
+class Person { }
+"""
+
+        expect:
+        def oldVersion = System.properties['java.version']
+        try {
+            setJavaVersion("1.6")
+            version current withTasks 'compileJava' run() assertTaskNotSkipped(":compileJava")
+            version current withTasks 'compileJava' run() assertTaskSkipped(":compileJava")
+            setJavaVersion("1.7")
+            version current withTasks 'compileJava' run() assertTaskNotSkipped(":compileJava")
+        } finally {
+            setJavaVersion(oldVersion)
+        }
+    }
+
+    private static void setJavaVersion(String version) {
+        System.properties['java.version'] = version
+        JavaVersion.resetCurrent()
     }
 }
