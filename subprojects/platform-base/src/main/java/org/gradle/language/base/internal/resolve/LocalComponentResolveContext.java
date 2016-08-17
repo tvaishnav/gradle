@@ -69,7 +69,7 @@ public class LocalComponentResolveContext implements ResolveContext {
 
     @Override
     public ComponentResolveMetadata toRootComponentMetaData() {
-        return newResolvingLocalComponentMetadata(libraryBinaryIdentifier, usage, dependencies);
+        return newResolvingLocalComponentMetadata(libraryBinaryIdentifier, usage.getConfigurationName(), dependencies);
     }
 
 }

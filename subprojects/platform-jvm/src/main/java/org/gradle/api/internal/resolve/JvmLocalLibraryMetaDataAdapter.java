@@ -34,7 +34,14 @@ import org.gradle.platform.base.DependencySpec;
 import org.gradle.platform.base.internal.BinarySpecInternal;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.gradle.jvm.internal.DefaultJvmBinarySpec.collectDependencies;
 import static org.gradle.language.base.internal.model.DefaultLibraryLocalComponentMetadata.newResolvedLibraryMetadata;
@@ -61,13 +68,22 @@ public class JvmLocalLibraryMetaDataAdapter implements LocalLibraryMetaDataAdapt
     }
 
     private DefaultLibraryLocalComponentMetadata createResolvedMetaData(BinarySpecInternal selectedBinary, String projectPath, EnumMap<UsageKind, Iterable<DependencySpec>> dependenciesPerUsage, EnumMap<UsageKind, TaskDependency> buildDependenciesPerUsage, EnumMap<UsageKind, List<PublishArtifact>> artifacts) {
-        DefaultLibraryLocalComponentMetadata metadata = newResolvedLibraryMetadata(selectedBinary.getId(), buildDependenciesPerUsage, dependenciesPerUsage, projectPath);
+
+        DefaultLibraryLocalComponentMetadata metadata = newResolvedLibraryMetadata(selectedBinary.getId(), toStringMap(buildDependenciesPerUsage), toStringMap(dependenciesPerUsage), projectPath);
         for (Map.Entry<UsageKind, List<PublishArtifact>> entry : artifacts.entrySet()) {
             UsageKind usage = entry.getKey();
             List<PublishArtifact> publishArtifacts = entry.getValue();
             metadata.addArtifacts(usage.getConfigurationName(), publishArtifacts);
         }
         return metadata;
+    }
+
+    private <T> Map<String, T> toStringMap(EnumMap<? extends Enum, T> enumMap) {
+        Map<String, T> map = new HashMap<String, T>(enumMap.size());
+        for (Map.Entry<? extends Enum, T> tEntry : enumMap.entrySet()) {
+            map.put(tEntry.getKey().name(), tEntry.getValue());
+        }
+        return map;
     }
 
     private void initializeUsages(EnumMap<UsageKind, Iterable<DependencySpec>> dependenciesPerUsage, EnumMap<UsageKind, TaskDependency> buildDependenciesPerUsage, EnumMap<UsageKind, List<PublishArtifact>> artifacts) {
