@@ -41,11 +41,8 @@ import org.gradle.internal.resolve.result.BuildableArtifactSetResolveResult;
 import org.gradle.internal.resolve.result.BuildableComponentArtifactsResolveResult;
 import org.gradle.internal.resolve.result.BuildableComponentIdResolveResult;
 import org.gradle.internal.resolve.result.BuildableComponentResolveResult;
-import org.gradle.language.base.internal.model.VariantAxisCompatibilityFactory;
-import org.gradle.language.base.internal.model.VariantsMetaData;
 import org.gradle.language.base.internal.resolve.LibraryResolveException;
 import org.gradle.model.ModelMap;
-import org.gradle.model.internal.manage.schema.ModelSchemaStore;
 import org.gradle.model.internal.registry.ModelRegistry;
 import org.gradle.model.internal.type.ModelType;
 import org.gradle.model.internal.type.ModelTypes;
@@ -61,26 +58,21 @@ import java.util.List;
 public class LocalLibraryDependencyResolver<T extends BinarySpec> implements DependencyToComponentIdResolver, ComponentMetaDataResolver, ArtifactResolver {
     private static final ModelType<ModelMap<ComponentSpec>> COMPONENT_MAP_TYPE = ModelTypes.modelMap(ComponentSpec.class);
     private final ProjectModelResolver projectModelResolver;
-    private final VariantsMetaData variantsMetaData;
-    private final VariantsMatcher matcher;
+    private final VariantChooser variantChooser;
     private final LibraryResolutionErrorMessageBuilder errorMessageBuilder;
     private final LocalLibraryMetaDataAdapter libraryMetaDataAdapter;
     private final Class<? extends BinarySpec> binaryType;
     private final Predicate<VariantComponentSpec> binarySpecPredicate;
 
-    public LocalLibraryDependencyResolver(
-        Class<T> binarySpecType,
-        ProjectModelResolver projectModelResolver,
-        List<VariantAxisCompatibilityFactory> selectorFactories,
-        VariantsMetaData variantsMetaData,
-        ModelSchemaStore schemaStore,
-        LocalLibraryMetaDataAdapter libraryMetaDataAdapter,
-        LibraryResolutionErrorMessageBuilder errorMessageBuilder) {
+    public LocalLibraryDependencyResolver(Class<T> binarySpecType,
+                                          ProjectModelResolver projectModelResolver,
+                                          VariantChooser variantChooser,
+                                          LocalLibraryMetaDataAdapter libraryMetaDataAdapter,
+                                          LibraryResolutionErrorMessageBuilder errorMessageBuilder) {
         this.projectModelResolver = projectModelResolver;
         this.libraryMetaDataAdapter = libraryMetaDataAdapter;
-        this.matcher = new VariantsMatcher(selectorFactories, binarySpecType, schemaStore);
+        this.variantChooser = variantChooser;
         this.errorMessageBuilder = errorMessageBuilder;
-        this.variantsMetaData = variantsMetaData;
         this.binaryType = binarySpecType;
         this.binarySpecPredicate = new Predicate<VariantComponentSpec>() {
             @Override
@@ -134,7 +126,7 @@ public class LocalLibraryDependencyResolver<T extends BinarySpec> implements Dep
 
     private void selectMatchingVariant(BuildableComponentIdResolveResult result, VariantComponentSpec selectedLibrary, LibraryComponentSelector selector, String selectorProjectPath, String libraryName) {
         Collection<BinarySpec> allBinaries = selectedLibrary.getBinaries().values();
-        Collection<? extends BinarySpec> compatibleBinaries = matcher.filterBinaries(variantsMetaData, allBinaries);
+        Collection<? extends BinarySpec> compatibleBinaries = variantChooser.chooseMatchingVariants(allBinaries);
         if (!allBinaries.isEmpty() && compatibleBinaries.isEmpty()) {
             // no compatible variant found
             result.failed(new ModuleVersionResolveException(selector, errorMessageBuilder.noCompatibleVariantErrorMessage(libraryName, allBinaries)));
