@@ -16,7 +16,6 @@
 
 package org.gradle.api.internal.resolve;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.artifacts.component.LibraryBinaryIdentifier;
@@ -34,7 +33,6 @@ import org.gradle.platform.base.LibraryBinarySpec;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import static org.gradle.language.base.internal.model.DefaultLibraryLocalComponentMetadata.newResolvedLibraryMetadata;
@@ -53,10 +51,9 @@ public class NativeLocalLibraryMetaDataAdapter implements LocalLibraryMetaDataAd
 
     private static LocalComponentMetadata createForNativeLibrary(NativeLibraryBinarySpec sharedLib) {
         LibraryBinaryIdentifier id = createComponentId(sharedLib);
-        DefaultLibraryLocalComponentMetadata metadata = createComponentMetadata(id);
-
-        // TODO:DAZ Don't use PublishArtifact and PublishArtifactLocalArtifactMetadata here
         NativeLibraryBinary libraryBinary = (NativeLibraryBinary) sharedLib;
+        DefaultLibraryLocalComponentMetadata metadata = createComponentMetadata(id, libraryBinary);
+
         for (File headerDir : libraryBinary.getHeaderDirs()) {
             PublishArtifact headerDirArtifact = new LibraryPublishArtifact("header", headerDir);
             metadata.addArtifact("compile", new PublishArtifactLocalArtifactMetadata(id, sharedLib.getDisplayName(), headerDirArtifact));
@@ -80,12 +77,16 @@ public class NativeLocalLibraryMetaDataAdapter implements LocalLibraryMetaDataAd
         return new DefaultLibraryBinaryIdentifier(projectPath, staticLib.getLibrary().getName(), "staticLibrary");
     }
 
-    private static DefaultLibraryLocalComponentMetadata createComponentMetadata(LibraryBinaryIdentifier id) {
-        List<String> usages = Lists.newArrayList("compile", "link", "run");
+    private static DefaultLibraryLocalComponentMetadata createComponentMetadata(LibraryBinaryIdentifier id, NativeLibraryBinary sharedLib) {
+        // TODO:DAZ Should wire task dependencies to artifacts, not configurations.
         Map<String, TaskDependency> configurations = Maps.newLinkedHashMap();
-        for (String usage : usages) {
-            configurations.put(usage, new DefaultTaskDependency());
-        }
-        return newResolvedLibraryMetadata(id, configurations, Collections.<String, Iterable<DependencySpec>>emptyMap(), null);
+        configurations.put("compile", new DefaultTaskDependency().add(sharedLib.getHeaderDirs()));
+        configurations.put("link", new DefaultTaskDependency().add(sharedLib.getLinkFiles()));
+        configurations.put("run", new DefaultTaskDependency().add(sharedLib.getRuntimeFiles()));
+
+        // TODO:DAZ For transitive dependency resolution, include dependencies from lib
+        Map<String, Iterable<DependencySpec>> dependencies = Collections.emptyMap();
+
+        return newResolvedLibraryMetadata(id, configurations, dependencies, null);
     }
 }

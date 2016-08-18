@@ -31,6 +31,7 @@ import org.gradle.platform.base.VariantComponentSpec;
 import java.util.Collection;
 import java.util.Set;
 
+// TODO:DAZ Work out what to do with 'api' linkage
 public class NativeVariantChooser implements VariantChooser {
 
     private final Flavor flavor;
