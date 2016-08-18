@@ -16,31 +16,53 @@
 
 package org.gradle.api.internal.resolve;
 
-import com.google.common.base.Objects;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Nullable;
-import org.gradle.api.artifacts.component.LibraryBinaryIdentifier;
+import org.gradle.nativeplatform.BuildType;
+import org.gradle.nativeplatform.Flavor;
+import org.gradle.nativeplatform.NativeLibraryBinarySpec;
+import org.gradle.nativeplatform.SharedLibraryBinarySpec;
+import org.gradle.nativeplatform.StaticLibraryBinarySpec;
+import org.gradle.nativeplatform.platform.NativePlatform;
 import org.gradle.platform.base.BinarySpec;
 import org.gradle.platform.base.VariantComponentSpec;
-import org.gradle.platform.base.internal.BinarySpecInternal;
 
 import java.util.Collection;
 import java.util.Collections;
 
 public class NativeVariantChooser implements VariantChooser {
     @Override
-    public Collection<? extends BinarySpec> chooseMatchingVariants(VariantComponentSpec componentSpec, @Nullable String variant) {
-        Collection<BinarySpec> allBinaries = componentSpec.getBinaries().values();
-        if (variant != null) {
-            // Choose explicit variant
-            for (BinarySpec binarySpec : allBinaries) {
-                BinarySpecInternal binary = (BinarySpecInternal) binarySpec;
-                LibraryBinaryIdentifier id = binary.getId();
-                if (Objects.equal(variant, id.getVariant())) {
-                    return Collections.singleton(binary);
-                }
-            }
-            return Collections.emptySet();
-        }
-        return allBinaries;
+    public Collection<? extends BinarySpec> chooseMatchingVariants(VariantComponentSpec componentSpec, @Nullable String linkage) {
+        Class<? extends NativeLibraryBinarySpec> type = getTypeForLinkage(linkage);
+        Collection<? extends NativeLibraryBinarySpec> candidateBinaries = componentSpec.getBinaries().withType(type).values();
+        return resolve(candidateBinaries, null, null, null);
     }
+
+    private Class<? extends NativeLibraryBinarySpec> getTypeForLinkage(String linkage) {
+        if ("static".equals(linkage)) {
+            return StaticLibraryBinarySpec.class;
+        }
+        if ("shared".equals(linkage) || linkage == null) {
+            return SharedLibraryBinarySpec.class;
+        }
+        throw new InvalidUserDataException("Not a valid linkage: " + linkage);
+    }
+
+    private Collection<NativeLibraryBinarySpec> resolve(Collection<? extends NativeLibraryBinarySpec> candidates, Flavor flavor, NativePlatform platform, BuildType buildType) {
+        for (NativeLibraryBinarySpec candidate : candidates) {
+            if (flavor != null && !flavor.getName().equals(candidate.getFlavor().getName())) {
+                continue;
+            }
+            if (platform != null && !platform.getName().equals(candidate.getTargetPlatform().getName())) {
+                continue;
+            }
+            if (buildType != null && !buildType.getName().equals(candidate.getBuildType().getName())) {
+                continue;
+            }
+
+            return Collections.singleton(candidate);
+        }
+        return Collections.emptySet();
+    }
+
 }

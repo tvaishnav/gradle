@@ -39,12 +39,11 @@ project(':native-lib') {
     }
 }
 
-
 task resolve(type: NativeDependencyResolveTask) {
     targetProject = ':native-lib'
     targetComponent = 'hello'
-    targetVariant = 'sharedLibrary'
-    usage = 'compile'
+    linkage = 'static'
+    usage = 'link'
 }
 
 import org.gradle.api.internal.resolve.NativeDependencyResolver
@@ -66,13 +65,13 @@ public class NativeDependencyResolveTask extends DefaultTask {
     public String targetComponent;
 
     @Input @Optional
-    public String targetVariant;
+    public String linkage;
 
     @Input String usage;
 
     @TaskAction
     public void resolve() {
-        Set<File> files = resolver.resolveFiles(targetProject, targetComponent, targetVariant, usage);
+        Set<File> files = resolver.resolveFiles(targetProject, targetComponent, linkage, usage);
         for (File file : files) {
             System.out.println("Resolved file: \${file.name} [\${file.absolutePath}]");
         }
