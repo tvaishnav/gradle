@@ -16,12 +16,18 @@
 
 package org.gradle.api.internal.resolve;
 
+import com.google.common.base.Objects;
+import org.gradle.api.Nullable;
+import org.gradle.api.artifacts.component.LibraryBinaryIdentifier;
 import org.gradle.language.base.internal.model.VariantAxisCompatibilityFactory;
 import org.gradle.language.base.internal.model.VariantsMetaData;
 import org.gradle.model.internal.manage.schema.ModelSchemaStore;
 import org.gradle.platform.base.BinarySpec;
+import org.gradle.platform.base.VariantComponentSpec;
+import org.gradle.platform.base.internal.BinarySpecInternal;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class JvmVariantChooser implements VariantChooser {
@@ -34,7 +40,20 @@ public class JvmVariantChooser implements VariantChooser {
     }
 
     @Override
-    public Collection<? extends BinarySpec> chooseMatchingVariants(Collection<BinarySpec> allBinaries) {
+    public Collection<? extends BinarySpec> chooseMatchingVariants(VariantComponentSpec componentSpec, @Nullable String variant) {
+        Collection<BinarySpec> allBinaries = componentSpec.getBinaries().values();
+        if (variant != null) {
+            // Choose explicit variant
+            for (BinarySpec binarySpec : allBinaries) {
+                BinarySpecInternal binary = (BinarySpecInternal) binarySpec;
+                LibraryBinaryIdentifier id = binary.getId();
+                if (Objects.equal(variant, id.getVariant())) {
+                    return Collections.singleton(binary);
+                }
+            }
+            return Collections.emptySet();
+        }
+
         return variantsMatcher.filterBinaries(variantsMetaData, allBinaries);
     }
 }

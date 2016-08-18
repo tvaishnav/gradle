@@ -16,10 +16,12 @@
 
 package org.gradle.api.internal.resolve;
 
+import org.gradle.api.Nullable;
 import org.gradle.platform.base.BinarySpec;
+import org.gradle.platform.base.VariantComponentSpec;
 
 import java.util.Collection;
 
 public interface VariantChooser {
-    Collection<? extends BinarySpec> chooseMatchingVariants(Collection<BinarySpec> allBinaries);
+    Collection<? extends BinarySpec> chooseMatchingVariants(VariantComponentSpec componentSpec, @Nullable String hint);
 }
