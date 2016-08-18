@@ -93,7 +93,8 @@ public class NativeBinaryServices implements PluginServiceRegistry {
 
         @Override
         public ComponentResolvers create(ResolveContext context) {
-            VariantChooser variantChooser = new NativeVariantChooser();
+            NativeBinarySpec binarySpec = ((NativeComponentResolveContext) context).getBinarySpec();
+            VariantChooser variantChooser = new NativeVariantChooser(binarySpec.getFlavor(), binarySpec.getTargetPlatform(), binarySpec.getBuildType());
             LocalLibraryMetaDataAdapter libraryMetaDataAdapter = new NativeLocalLibraryMetaDataAdapter();
             LibraryResolutionErrorMessageBuilder errorMessageBuilder = new NativeLibraryResolutionErrorMessageBuilder();
             LocalLibraryDependencyResolver<NativeBinarySpec> delegate =

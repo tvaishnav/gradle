@@ -16,6 +16,7 @@
 
 package org.gradle.api.internal.resolve;
 
+import com.google.common.collect.Sets;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Nullable;
 import org.gradle.nativeplatform.BuildType;
@@ -28,14 +29,25 @@ import org.gradle.platform.base.BinarySpec;
 import org.gradle.platform.base.VariantComponentSpec;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Set;
 
 public class NativeVariantChooser implements VariantChooser {
+
+    private final Flavor flavor;
+    private final NativePlatform platform;
+    private final BuildType buildType;
+
+    public NativeVariantChooser(Flavor flavor, NativePlatform platform, BuildType buildType) {
+        this.flavor = flavor;
+        this.platform = platform;
+        this.buildType = buildType;
+    }
+
     @Override
     public Collection<? extends BinarySpec> chooseMatchingVariants(VariantComponentSpec componentSpec, @Nullable String linkage) {
         Class<? extends NativeLibraryBinarySpec> type = getTypeForLinkage(linkage);
         Collection<? extends NativeLibraryBinarySpec> candidateBinaries = componentSpec.getBinaries().withType(type).values();
-        return resolve(candidateBinaries, null, null, null);
+        return resolve(candidateBinaries, flavor, platform, buildType);
     }
 
     private Class<? extends NativeLibraryBinarySpec> getTypeForLinkage(String linkage) {
@@ -49,6 +61,7 @@ public class NativeVariantChooser implements VariantChooser {
     }
 
     private Collection<NativeLibraryBinarySpec> resolve(Collection<? extends NativeLibraryBinarySpec> candidates, Flavor flavor, NativePlatform platform, BuildType buildType) {
+        Set<NativeLibraryBinarySpec> matches = Sets.newLinkedHashSet();
         for (NativeLibraryBinarySpec candidate : candidates) {
             if (flavor != null && !flavor.getName().equals(candidate.getFlavor().getName())) {
                 continue;
@@ -60,9 +73,9 @@ public class NativeVariantChooser implements VariantChooser {
                 continue;
             }
 
-            return Collections.singleton(candidate);
+            matches.add(candidate);
         }
-        return Collections.emptySet();
+        return matches;
     }
 
 }
