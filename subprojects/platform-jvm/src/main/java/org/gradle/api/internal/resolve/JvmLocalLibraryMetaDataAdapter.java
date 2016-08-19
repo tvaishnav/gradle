@@ -78,9 +78,9 @@ public class JvmLocalLibraryMetaDataAdapter implements LocalLibraryMetaDataAdapt
         return metadata;
     }
 
-    private <T> Map<String, T> toStringMap(EnumMap<? extends Enum, T> enumMap) {
+    private <T> Map<String, T> toStringMap(EnumMap<? extends Enum<UsageKind>, T> enumMap) {
         Map<String, T> map = new HashMap<String, T>(enumMap.size());
-        for (Map.Entry<? extends Enum, T> tEntry : enumMap.entrySet()) {
+        for (Map.Entry<? extends Enum<UsageKind>, T> tEntry : enumMap.entrySet()) {
             map.put(tEntry.getKey().name(), tEntry.getValue());
         }
         return map;
