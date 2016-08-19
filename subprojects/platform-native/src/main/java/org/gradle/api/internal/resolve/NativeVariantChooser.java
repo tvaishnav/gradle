@@ -58,6 +58,9 @@ public class NativeVariantChooser implements VariantChooser {
         if ("shared".equals(linkage) || linkage == null) {
             return SharedLibraryBinarySpec.class;
         }
+        if ("api".equals(linkage)) {
+            return SharedLibraryBinarySpec.class; // TODO: SG Not correct
+        }
         throw new InvalidUserDataException("Not a valid linkage: " + linkage);
     }
 

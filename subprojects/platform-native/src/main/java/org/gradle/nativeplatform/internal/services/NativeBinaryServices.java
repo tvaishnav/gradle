@@ -20,13 +20,14 @@ import org.gradle.api.internal.artifacts.ResolveContext;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.ComponentResolvers;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.DelegatingComponentResolvers;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.ResolverProviderFactory;
-import org.gradle.api.internal.resolve.NativeVariantChooser;
 import org.gradle.api.internal.resolve.LibraryResolutionErrorMessageBuilder;
 import org.gradle.api.internal.resolve.LocalLibraryDependencyResolver;
 import org.gradle.api.internal.resolve.LocalLibraryMetaDataAdapter;
 import org.gradle.api.internal.resolve.NativeComponentResolveContext;
+import org.gradle.api.internal.resolve.NativeDependencyResolver;
 import org.gradle.api.internal.resolve.NativeLibraryResolutionErrorMessageBuilder;
 import org.gradle.api.internal.resolve.NativeLocalLibraryMetaDataAdapter;
+import org.gradle.api.internal.resolve.NativeVariantChooser;
 import org.gradle.api.internal.resolve.ProjectModelResolver;
 import org.gradle.api.internal.resolve.VariantChooser;
 import org.gradle.internal.service.ServiceRegistration;
@@ -65,6 +66,7 @@ public class NativeBinaryServices implements PluginServiceRegistry {
         registration.add(DefaultWindowsSdkLocator.class);
         registration.add(CompilerMetaDataProviderFactory.class);
         registration.add(NativeLibraryDependencyResolverFactory.class);
+        registration.add(NativeDependencyResolver.class);
     }
 
     @Override
