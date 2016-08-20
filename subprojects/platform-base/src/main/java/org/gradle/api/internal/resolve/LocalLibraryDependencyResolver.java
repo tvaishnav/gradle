@@ -45,6 +45,7 @@ import org.gradle.model.ModelMap;
 import org.gradle.model.internal.registry.ModelRegistry;
 import org.gradle.model.internal.type.ModelType;
 import org.gradle.model.internal.type.ModelTypes;
+import org.gradle.platform.base.Binary;
 import org.gradle.platform.base.BinarySpec;
 import org.gradle.platform.base.ComponentSpec;
 import org.gradle.platform.base.VariantComponentSpec;
@@ -59,7 +60,7 @@ public class LocalLibraryDependencyResolver<T extends BinarySpec> implements Dep
     private final VariantChooser variantChooser;
     private final LibraryResolutionErrorMessageBuilder errorMessageBuilder;
     private final LocalLibraryMetaDataAdapter libraryMetaDataAdapter;
-    private final Class<? extends BinarySpec> binaryType;
+    private final Class<? extends Binary> binaryType;
     private final Predicate<VariantComponentSpec> binarySpecPredicate;
 
     public LocalLibraryDependencyResolver(Class<T> binarySpecType,

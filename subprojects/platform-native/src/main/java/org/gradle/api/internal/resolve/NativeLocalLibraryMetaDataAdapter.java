@@ -27,7 +27,7 @@ import org.gradle.internal.component.local.model.PublishArtifactLocalArtifactMet
 import org.gradle.language.base.internal.model.DefaultLibraryLocalComponentMetadata;
 import org.gradle.nativeplatform.NativeLibraryBinary;
 import org.gradle.nativeplatform.NativeLibraryBinarySpec;
-import org.gradle.platform.base.BinarySpec;
+import org.gradle.platform.base.Binary;
 import org.gradle.platform.base.DependencySpec;
 import org.gradle.platform.base.LibraryBinarySpec;
 
@@ -45,7 +45,7 @@ public class NativeLocalLibraryMetaDataAdapter implements LocalLibraryMetaDataAd
 
     @Override
     @SuppressWarnings("unchecked")
-    public LocalComponentMetadata createLocalComponentMetaData(BinarySpec selectedBinary, String projectPath, boolean toAssembly) {
+    public LocalComponentMetadata createLocalComponentMetaData(Binary selectedBinary, String projectPath, boolean toAssembly) {
 
         if (selectedBinary instanceof NativeLibraryBinarySpec) {
             return createForNativeLibrary((NativeLibraryBinarySpec) selectedBinary);
