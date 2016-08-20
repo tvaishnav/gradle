@@ -16,13 +16,13 @@
 
 package org.gradle.api.internal.resolve;
 
-import org.gradle.platform.base.BinarySpec;
+import org.gradle.platform.base.Binary;
 
 import java.util.Collection;
 
 public interface LibraryResolutionErrorMessageBuilder {
-    String multipleCompatibleVariantsErrorMessage(String libraryName, Collection<? extends BinarySpec> binaries);
+    String multipleCompatibleVariantsErrorMessage(String libraryName, Collection<? extends Binary> binaries);
 
-    String noCompatibleVariantErrorMessage(String libraryName, Collection<BinarySpec> allBinaries);
+    String noCompatibleVariantErrorMessage(String libraryName, Collection<? extends Binary> allBinaries);
 
 }

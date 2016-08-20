@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-package org.gradle.api.internal.resolve;
+package org.gradle.platform.base;
 
-import org.gradle.api.Nullable;
-import org.gradle.platform.base.Binary;
-import org.gradle.platform.base.VariantComponent;
-
-import java.util.Collection;
-
-public interface VariantChooser {
-    Collection<? extends Binary> chooseMatchingVariants(VariantComponent component, @Nullable String hint);
+// TODO:DAZ Probably should be internal
+public interface VariantComponent {
+    Iterable<? extends Binary> getVariants();
 }

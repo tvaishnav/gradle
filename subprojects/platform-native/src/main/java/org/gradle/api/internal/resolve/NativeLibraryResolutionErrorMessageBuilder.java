@@ -16,18 +16,18 @@
 
 package org.gradle.api.internal.resolve;
 
-import org.gradle.platform.base.BinarySpec;
+import org.gradle.platform.base.Binary;
 
 import java.util.Collection;
 
 public class NativeLibraryResolutionErrorMessageBuilder implements LibraryResolutionErrorMessageBuilder {
     @Override
-    public String multipleCompatibleVariantsErrorMessage(String libraryName, Collection<? extends BinarySpec> binaries) {
+    public String multipleCompatibleVariantsErrorMessage(String libraryName, Collection<? extends Binary> binaries) {
         return String.format("Multiple compatible variants for %s: %s", libraryName, binaries);
     }
 
     @Override
-    public String noCompatibleVariantErrorMessage(String libraryName, Collection<BinarySpec> allBinaries) {
+    public String noCompatibleVariantErrorMessage(String libraryName, Collection<? extends Binary> allBinaries) {
         return String.format("No compatible variant for %s. Found %s", libraryName, allBinaries);
     }
 }

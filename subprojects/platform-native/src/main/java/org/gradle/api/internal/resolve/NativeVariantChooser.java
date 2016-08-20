@@ -16,6 +16,7 @@
 
 package org.gradle.api.internal.resolve;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Nullable;
@@ -25,8 +26,9 @@ import org.gradle.nativeplatform.NativeLibraryBinarySpec;
 import org.gradle.nativeplatform.SharedLibraryBinarySpec;
 import org.gradle.nativeplatform.StaticLibraryBinarySpec;
 import org.gradle.nativeplatform.platform.NativePlatform;
+import org.gradle.platform.base.Binary;
 import org.gradle.platform.base.BinarySpec;
-import org.gradle.platform.base.VariantComponentSpec;
+import org.gradle.platform.base.VariantComponent;
 
 import java.util.Collection;
 import java.util.Set;
@@ -45,12 +47,18 @@ public class NativeVariantChooser implements VariantChooser {
     }
 
     @Override
-    public Collection<? extends BinarySpec> chooseMatchingVariants(VariantComponentSpec componentSpec, @Nullable String linkage) {
+    public Collection<? extends BinarySpec> chooseMatchingVariants(VariantComponent componentSpec, @Nullable String linkage) {
         Class<? extends NativeLibraryBinarySpec> type = getTypeForLinkage(linkage);
-        Collection<? extends NativeLibraryBinarySpec> candidateBinaries = componentSpec.getBinaries().withType(type).values();
+        Collection<NativeLibraryBinarySpec> candidateBinaries = Lists.newArrayList();
+        for (Binary binary : componentSpec.getVariants()) {
+            if (type.isInstance(binary)) {
+                candidateBinaries.add(type.cast(binary));
+            }
+        }
         return resolve(candidateBinaries, flavor, platform, buildType);
     }
 
+    // TODO:DAZ Needs to handle Prebuilt libraries too (with their different type hierarchy...)
     private Class<? extends NativeLibraryBinarySpec> getTypeForLinkage(String linkage) {
         if ("static".equals(linkage)) {
             return StaticLibraryBinarySpec.class;

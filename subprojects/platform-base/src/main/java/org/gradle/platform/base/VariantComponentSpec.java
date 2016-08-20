@@ -23,7 +23,7 @@ import org.gradle.model.ModelMap;
  * Represents a component that is made up of one or more mutually exclusive components.
  */
 @Incubating
-public interface VariantComponentSpec extends ComponentSpec {
+public interface VariantComponentSpec extends ComponentSpec, VariantComponent {
     /**
      * The variants of this component.
      */

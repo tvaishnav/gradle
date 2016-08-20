@@ -17,13 +17,15 @@
 package org.gradle.api.internal.resolve;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 import org.gradle.api.Nullable;
 import org.gradle.api.artifacts.component.LibraryBinaryIdentifier;
 import org.gradle.language.base.internal.model.VariantAxisCompatibilityFactory;
 import org.gradle.language.base.internal.model.VariantsMetaData;
 import org.gradle.model.internal.manage.schema.ModelSchemaStore;
+import org.gradle.platform.base.Binary;
 import org.gradle.platform.base.BinarySpec;
-import org.gradle.platform.base.VariantComponentSpec;
+import org.gradle.platform.base.VariantComponent;
 import org.gradle.platform.base.internal.BinarySpecInternal;
 
 import java.util.Collection;
@@ -40,11 +42,15 @@ public class JvmVariantChooser implements VariantChooser {
     }
 
     @Override
-    public Collection<? extends BinarySpec> chooseMatchingVariants(VariantComponentSpec componentSpec, @Nullable String variant) {
-        Collection<BinarySpec> allBinaries = componentSpec.getBinaries().values();
+    public Collection<? extends BinarySpec> chooseMatchingVariants(VariantComponent componentSpec, @Nullable String variant) {
+        // We know that Jvm binaries are BinarySpec instances
+        Collection<BinarySpec> allBinaries = Lists.newArrayList();
+        for (Binary binary : componentSpec.getVariants()) {
+            allBinaries.add((BinarySpec) binary);
+        }
         if (variant != null) {
             // Choose explicit variant
-            for (BinarySpec binarySpec : allBinaries) {
+            for (Binary binarySpec : allBinaries) {
                 BinarySpecInternal binary = (BinarySpecInternal) binarySpec;
                 LibraryBinaryIdentifier id = binary.getId();
                 if (Objects.equal(variant, id.getVariant())) {
