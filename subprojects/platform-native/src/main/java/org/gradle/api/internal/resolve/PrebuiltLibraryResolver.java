@@ -17,6 +17,7 @@
 package org.gradle.api.internal.resolve;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.gradle.api.UnknownProjectException;
 import org.gradle.model.ModelMap;
@@ -26,20 +27,21 @@ import org.gradle.model.internal.type.ModelTypes;
 import org.gradle.nativeplatform.NativeLibraryBinary;
 import org.gradle.nativeplatform.PrebuiltLibraries;
 import org.gradle.nativeplatform.PrebuiltLibrary;
+import org.gradle.platform.base.VariantComponent;
 
 import java.util.List;
 
 public class PrebuiltLibraryResolver implements LocalLibraryResolver {
     private static final ModelType<ModelMap<PrebuiltLibraries>> PREBUILT_LIBRARIES_TYPE = ModelTypes.modelMap(PrebuiltLibraries.class);
     private final ProjectModelResolver projectModelResolver;
-    private final Predicate<PrebuiltLibrary> binarySpecPredicate;
+    private final Predicate<VariantComponent> binarySpecPredicate;
 
     public PrebuiltLibraryResolver(ProjectModelResolver projectModelResolver) {
         this.projectModelResolver = projectModelResolver;
-        this.binarySpecPredicate = new Predicate<PrebuiltLibrary>() {
+        this.binarySpecPredicate = new Predicate<VariantComponent>() {
             @Override
-            public boolean apply(PrebuiltLibrary input) {
-                return !input.getBinaries().isEmpty();
+            public boolean apply(VariantComponent input) {
+                return Iterables.size(input.getVariants()) != 0;
             }
         };
     }
@@ -65,7 +67,7 @@ public class PrebuiltLibraryResolver implements LocalLibraryResolver {
         if (librarySpecs.isEmpty()) {
             return null;
         }
-        return LibraryResolutionResult.emptyResolutionResult(NativeLibraryBinary.class); // TODO: LibraryResolutionResult.of(NativeLibraryBinary.class, librarySpecs, componentName, binarySpecPredicate);
+        return LibraryResolutionResult.of(NativeLibraryBinary.class, librarySpecs, componentName, binarySpecPredicate);
     }
 
     private void collectLocalComponents(ModelRegistry projectModel, String componentName, List<PrebuiltLibrary> librarySpecs) {

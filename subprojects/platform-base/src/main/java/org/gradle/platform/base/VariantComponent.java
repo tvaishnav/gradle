@@ -19,4 +19,5 @@ package org.gradle.platform.base;
 // TODO:DAZ Probably should be internal
 public interface VariantComponent {
     Iterable<? extends Binary> getVariants();
+    String getName();
 }

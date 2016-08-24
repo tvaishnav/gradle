@@ -39,9 +39,7 @@ import org.gradle.internal.resolve.result.BuildableComponentIdResolveResult;
 import org.gradle.internal.resolve.result.BuildableComponentResolveResult;
 import org.gradle.language.base.internal.resolve.LibraryResolveException;
 import org.gradle.platform.base.Binary;
-import org.gradle.platform.base.BinarySpec;
 import org.gradle.platform.base.VariantComponent;
-import org.gradle.platform.base.VariantComponentSpec;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -75,7 +73,7 @@ public class LocalLibraryDependencyResolver implements DependencyToComponentIdRe
         final String libraryName = selector.getLibraryName();
         final String variant = selector.getVariant();
         LibraryResolutionResult resolutionResult = libraryResolver.resolve(selectorProjectPath, libraryName);
-        VariantComponentSpec selectedLibrary = resolutionResult.getSelectedLibrary();
+        VariantComponent selectedLibrary = resolutionResult.getSelectedLibrary();
         if (selectedLibrary == null) {
             String message = resolutionResult.toResolutionErrorMessage(selector);
             ModuleVersionResolveException failure = new ModuleVersionResolveException(selector, new LibraryResolveException(message));
@@ -86,7 +84,7 @@ public class LocalLibraryDependencyResolver implements DependencyToComponentIdRe
         Collection<? extends Binary> matchingVariants = chooseMatchingVariants(selectedLibrary, variant);
         if (matchingVariants.isEmpty()) {
             // no compatible variant found
-            Collection<BinarySpec> values = selectedLibrary.getBinaries().values();
+            Iterable<? extends Binary> values = selectedLibrary.getVariants();
             result.failed(new ModuleVersionResolveException(selector, errorMessageBuilder.noCompatibleVariantErrorMessage(libraryName, values)));
         } else if (matchingVariants.size() > 1) {
             result.failed(new ModuleVersionResolveException(selector, errorMessageBuilder.multipleCompatibleVariantsErrorMessage(libraryName, matchingVariants)));

@@ -24,7 +24,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import org.gradle.api.artifacts.component.LibraryComponentSelector;
 import org.gradle.platform.base.Binary;
-import org.gradle.platform.base.VariantComponentSpec;
+import org.gradle.platform.base.VariantComponent;
 
 import java.util.Collection;
 import java.util.List;
@@ -40,14 +40,14 @@ public class LibraryResolutionResult {
             return "'" + input + "'";
         }
     };
-    private final Map<String, VariantComponentSpec> libsMatchingRequirements;
-    private final Map<String, VariantComponentSpec> libsNotMatchingRequirements;
+    private final Map<String, VariantComponent> libsMatchingRequirements;
+    private final Map<String, VariantComponent> libsNotMatchingRequirements;
     private final Class<? extends Binary> binaryType;
 
     private boolean projectNotFound;
 
-    private VariantComponentSpec selectedLibrary;
-    private VariantComponentSpec nonMatchingLibrary;
+    private VariantComponent selectedLibrary;
+    private VariantComponent nonMatchingLibrary;
 
     private LibraryResolutionResult(Class<? extends Binary> binaryType) {
         this.binaryType = binaryType;
@@ -55,7 +55,7 @@ public class LibraryResolutionResult {
         this.libsNotMatchingRequirements = Maps.newHashMap();
     }
 
-    private VariantComponentSpec getSingleMatchingLibrary() {
+    private VariantComponent getSingleMatchingLibrary() {
         if (libsMatchingRequirements.size() == 1) {
             return libsMatchingRequirements.values().iterator().next();
         }
@@ -64,7 +64,7 @@ public class LibraryResolutionResult {
 
     private void resolve(String libraryName) {
         if (libraryName == null) {
-            VariantComponentSpec singleMatchingLibrary = getSingleMatchingLibrary();
+            VariantComponent singleMatchingLibrary = getSingleMatchingLibrary();
             if (singleMatchingLibrary == null) {
                 return;
             }
@@ -83,11 +83,11 @@ public class LibraryResolutionResult {
         return !libsMatchingRequirements.isEmpty() || !libsNotMatchingRequirements.isEmpty();
     }
 
-    public VariantComponentSpec getSelectedLibrary() {
+    public VariantComponent getSelectedLibrary() {
         return selectedLibrary;
     }
 
-    public VariantComponentSpec getNonMatchingLibrary() {
+    public VariantComponent getNonMatchingLibrary() {
         return nonMatchingLibrary;
     }
 
@@ -112,7 +112,7 @@ public class LibraryResolutionResult {
                 Joiner.on(", ").appendTo(sb, candidateLibraries);
             }
         } else {
-            VariantComponentSpec notMatchingRequirements = getNonMatchingLibrary();
+            VariantComponent notMatchingRequirements = getNonMatchingLibrary();
             if (notMatchingRequirements != null) {
                 sb.append(" contains a library named '").append(libraryName)
                     .append("' but it doesn't have any binary of type ")
@@ -131,9 +131,9 @@ public class LibraryResolutionResult {
         return sb.toString();
     }
 
-    public static LibraryResolutionResult of(Class<? extends Binary> binaryType, Collection<? extends VariantComponentSpec> libraries, String libraryName, Predicate<? super VariantComponentSpec> libraryFilter) {
+    public static LibraryResolutionResult of(Class<? extends Binary> binaryType, Collection<? extends VariantComponent> libraries, String libraryName, Predicate<? super VariantComponent> libraryFilter) {
         LibraryResolutionResult result = new LibraryResolutionResult(binaryType);
-        for (VariantComponentSpec librarySpec : libraries) {
+        for (VariantComponent librarySpec : libraries) {
             if (libraryFilter.apply(librarySpec)) {
                 result.libsMatchingRequirements.put(librarySpec.getName(), librarySpec);
             } else {

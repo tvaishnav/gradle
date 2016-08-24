@@ -18,11 +18,9 @@ package org.gradle.api.internal.resolve;
 
 import org.gradle.platform.base.Binary;
 
-import java.util.Collection;
-
 public interface LibraryResolutionErrorMessageBuilder {
-    String multipleCompatibleVariantsErrorMessage(String libraryName, Collection<? extends Binary> binaries);
+    String multipleCompatibleVariantsErrorMessage(String libraryName, Iterable<? extends Binary> binaries);
 
-    String noCompatibleVariantErrorMessage(String libraryName, Collection<? extends Binary> allBinaries);
+    String noCompatibleVariantErrorMessage(String libraryName, Iterable<? extends Binary> allBinaries);
 
 }

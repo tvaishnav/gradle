@@ -17,6 +17,7 @@
 package org.gradle.api.internal.resolve;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.gradle.api.UnknownProjectException;
 import org.gradle.model.ModelMap;
@@ -25,6 +26,7 @@ import org.gradle.model.internal.type.ModelType;
 import org.gradle.model.internal.type.ModelTypes;
 import org.gradle.platform.base.Binary;
 import org.gradle.platform.base.ComponentSpec;
+import org.gradle.platform.base.VariantComponent;
 import org.gradle.platform.base.VariantComponentSpec;
 
 import java.util.List;
@@ -33,15 +35,20 @@ public class DefaultLocalLibraryResolver implements LocalLibraryResolver {
     private static final ModelType<ModelMap<ComponentSpec>> COMPONENT_MAP_TYPE = ModelTypes.modelMap(ComponentSpec.class);
     private final ProjectModelResolver projectModelResolver;
     private final Class<? extends Binary> binaryType;
-    private final Predicate<VariantComponentSpec> binarySpecPredicate;
+    private final Predicate<VariantComponent> binarySpecPredicate;
 
     public DefaultLocalLibraryResolver(ProjectModelResolver projectModelResolver, final Class<? extends Binary> binaryType) {
         this.projectModelResolver = projectModelResolver;
         this.binaryType = binaryType;
-        this.binarySpecPredicate = new Predicate<VariantComponentSpec>() {
+        this.binarySpecPredicate = new Predicate<VariantComponent>() {
             @Override
-            public boolean apply(VariantComponentSpec input) {
-                return !input.getBinaries().withType(binaryType).isEmpty();
+            public boolean apply(VariantComponent input) {
+                return Iterables.any(input.getVariants(), new Predicate<Binary>() {
+                    @Override
+                    public boolean apply(Binary input) {
+                        return binaryType.isAssignableFrom(input.getClass());
+                    }
+                });
             }
         };
     }
