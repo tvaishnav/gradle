@@ -46,22 +46,20 @@ import org.gradle.platform.base.VariantComponentSpec;
 import java.util.Collection;
 import java.util.Collections;
 
-public class LocalLibraryDependencyResolver<T extends Binary> implements DependencyToComponentIdResolver, ComponentMetaDataResolver, ArtifactResolver {
+public class LocalLibraryDependencyResolver implements DependencyToComponentIdResolver, ComponentMetaDataResolver, ArtifactResolver {
     private final VariantChooser variantChooser;
     private final LibraryResolutionErrorMessageBuilder errorMessageBuilder;
     private final LocalLibraryMetaDataAdapter libraryMetaDataAdapter;
     private final LocalLibraryResolver libraryResolver;
 
-    public LocalLibraryDependencyResolver(Class<T> binaryType,
-                                          ProjectModelResolver projectModelResolver,
+    public LocalLibraryDependencyResolver(LocalLibraryResolver libraryResolver,
                                           VariantChooser variantChooser,
                                           LocalLibraryMetaDataAdapter libraryMetaDataAdapter,
                                           LibraryResolutionErrorMessageBuilder errorMessageBuilder) {
         this.libraryMetaDataAdapter = libraryMetaDataAdapter;
         this.variantChooser = variantChooser;
         this.errorMessageBuilder = errorMessageBuilder;
-        // TODO:DAZ Pass this in, to permit different ways of finding libraries.
-        this.libraryResolver = new DefaultLocalLibraryResolver(projectModelResolver, binaryType);
+        this.libraryResolver = libraryResolver;
     }
 
     @Override

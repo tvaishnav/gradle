@@ -29,7 +29,7 @@ import org.gradle.platform.base.VariantComponentSpec;
 
 import java.util.List;
 
-class DefaultLocalLibraryResolver implements LocalLibraryResolver {
+public class DefaultLocalLibraryResolver implements LocalLibraryResolver {
     private static final ModelType<ModelMap<ComponentSpec>> COMPONENT_MAP_TYPE = ModelTypes.modelMap(ComponentSpec.class);
     private final ProjectModelResolver projectModelResolver;
     private final Class<? extends Binary> binaryType;

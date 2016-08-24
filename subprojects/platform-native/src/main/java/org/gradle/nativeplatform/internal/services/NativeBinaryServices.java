@@ -20,6 +20,7 @@ import org.gradle.api.internal.artifacts.ResolveContext;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.ComponentResolvers;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.DelegatingComponentResolvers;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.ResolverProviderFactory;
+import org.gradle.api.internal.resolve.DefaultLocalLibraryResolver;
 import org.gradle.api.internal.resolve.LibraryResolutionErrorMessageBuilder;
 import org.gradle.api.internal.resolve.LocalLibraryDependencyResolver;
 import org.gradle.api.internal.resolve.LocalLibraryMetaDataAdapter;
@@ -99,10 +100,9 @@ public class NativeBinaryServices implements PluginServiceRegistry {
             VariantChooser variantChooser = new NativeVariantChooser(binarySpec.getFlavor(), binarySpec.getTargetPlatform(), binarySpec.getBuildType());
             LocalLibraryMetaDataAdapter libraryMetaDataAdapter = new NativeLocalLibraryMetaDataAdapter();
             LibraryResolutionErrorMessageBuilder errorMessageBuilder = new NativeLibraryResolutionErrorMessageBuilder();
-            LocalLibraryDependencyResolver<NativeBinarySpec> delegate =
-                    new LocalLibraryDependencyResolver<NativeBinarySpec>(
-                            NativeBinarySpec.class,
-                            projectModelResolver,
+            LocalLibraryDependencyResolver delegate =
+                    new LocalLibraryDependencyResolver(
+                            new DefaultLocalLibraryResolver(projectModelResolver, NativeBinarySpec.class),
                             variantChooser,
                             libraryMetaDataAdapter,
                         errorMessageBuilder
@@ -110,5 +110,4 @@ public class NativeBinaryServices implements PluginServiceRegistry {
             return DelegatingComponentResolvers.of(delegate);
         }
     }
-
 }
