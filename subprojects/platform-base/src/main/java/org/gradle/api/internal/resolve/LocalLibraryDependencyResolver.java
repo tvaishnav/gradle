@@ -61,7 +61,7 @@ public class LocalLibraryDependencyResolver<T extends Binary> implements Depende
         this.variantChooser = variantChooser;
         this.errorMessageBuilder = errorMessageBuilder;
         // TODO:DAZ Pass this in, to permit different ways of finding libraries.
-        this.libraryResolver = new LocalLibraryResolver(projectModelResolver, binaryType);
+        this.libraryResolver = new DefaultLocalLibraryResolver(projectModelResolver, binaryType);
     }
 
     @Override
