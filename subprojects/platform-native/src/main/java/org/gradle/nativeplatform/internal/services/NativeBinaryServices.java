@@ -29,7 +29,6 @@ import org.gradle.api.internal.resolve.NativeDependencyResolver;
 import org.gradle.api.internal.resolve.NativeLibraryResolutionErrorMessageBuilder;
 import org.gradle.api.internal.resolve.NativeLocalLibraryMetaDataAdapter;
 import org.gradle.api.internal.resolve.NativeVariantChooser;
-import org.gradle.api.internal.resolve.PrebuiltLibraryResolver;
 import org.gradle.api.internal.resolve.ProjectModelResolver;
 import org.gradle.api.internal.resolve.VariantChooser;
 import org.gradle.internal.service.ServiceRegistration;
@@ -69,7 +68,6 @@ public class NativeBinaryServices implements PluginServiceRegistry {
         registration.add(CompilerMetaDataProviderFactory.class);
         registration.add(NativeLibraryDependencyResolverFactory.class);
         registration.add(NativeDependencyResolver.class);
-        registration.add(PrebuiltLibraryDependencyResolverFactory.class);
     }
 
     @Override
@@ -109,38 +107,7 @@ public class NativeBinaryServices implements PluginServiceRegistry {
                             libraryMetaDataAdapter,
                         errorMessageBuilder
                     );
-            return DelegatingComponentResolvers.of(delegate);
-        }
-    }
-
-
-    public static class PrebuiltLibraryDependencyResolverFactory implements ResolverProviderFactory {
-        private final ProjectModelResolver projectModelResolver;
-        private final ServiceRegistry registry;
-
-        public PrebuiltLibraryDependencyResolverFactory(ProjectModelResolver projectModelResolver, ServiceRegistry registry) {
-            this.projectModelResolver = projectModelResolver;
-            this.registry = registry;
-        }
-
-        @Override
-        public boolean canCreate(ResolveContext context) {
-            return context instanceof NativeComponentResolveContext;
-        }
-
-        @Override
-        public ComponentResolvers create(ResolveContext context) {
-            NativeBinarySpec binarySpec = ((NativeComponentResolveContext) context).getBinarySpec();
-            VariantChooser variantChooser = new NativeVariantChooser(binarySpec.getFlavor(), binarySpec.getTargetPlatform(), binarySpec.getBuildType());
-            LocalLibraryMetaDataAdapter libraryMetaDataAdapter = new NativeLocalLibraryMetaDataAdapter();
-            LibraryResolutionErrorMessageBuilder errorMessageBuilder = new NativeLibraryResolutionErrorMessageBuilder();
-            LocalLibraryDependencyResolver delegate =
-                new LocalLibraryDependencyResolver(
-                    new PrebuiltLibraryResolver(projectModelResolver),
-                    variantChooser,
-                    libraryMetaDataAdapter,
-                    errorMessageBuilder
-                );
+            // TODO:                             new PrebuiltLibraryResolver(projectModelResolver),
             return DelegatingComponentResolvers.of(delegate);
         }
     }
