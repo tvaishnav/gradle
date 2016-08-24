@@ -16,61 +16,33 @@
 
 package org.gradle.api.internal.resolve;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import org.gradle.api.UnknownProjectException;
 import org.gradle.model.ModelMap;
 import org.gradle.model.internal.registry.ModelRegistry;
 import org.gradle.model.internal.type.ModelType;
 import org.gradle.model.internal.type.ModelTypes;
-import org.gradle.nativeplatform.NativeLibraryBinary;
 import org.gradle.nativeplatform.PrebuiltLibraries;
 import org.gradle.nativeplatform.PrebuiltLibrary;
 import org.gradle.platform.base.VariantComponent;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class PrebuiltLibraryResolver implements LocalLibraryResolver {
     private static final ModelType<ModelMap<PrebuiltLibraries>> PREBUILT_LIBRARIES_TYPE = ModelTypes.modelMap(PrebuiltLibraries.class);
-    private final ProjectModelResolver projectModelResolver;
-    private final Predicate<VariantComponent> binarySpecPredicate;
-
-    public PrebuiltLibraryResolver(ProjectModelResolver projectModelResolver) {
-        this.projectModelResolver = projectModelResolver;
-        this.binarySpecPredicate = new Predicate<VariantComponent>() {
-            @Override
-            public boolean apply(VariantComponent input) {
-                return Iterables.size(input.getVariants()) != 0;
-            }
-        };
-    }
 
     @Override
-    public LibraryResolutionResult resolve(String projectPath, String libraryName) {
-        try {
-            ModelRegistry projectModel = projectModelResolver.resolveProjectModel(projectPath);
-            LibraryResolutionResult libraries = findLocalComponent(libraryName, projectModel);
-            if (libraries != null) {
-                return libraries;
-            }
-
-            return LibraryResolutionResult.emptyResolutionResult(NativeLibraryBinary.class);
-        } catch (UnknownProjectException e) {
-            return LibraryResolutionResult.projectNotFound(NativeLibraryBinary.class);
-        }
-    }
-
-    private LibraryResolutionResult findLocalComponent(String componentName, ModelRegistry projectModel) {
-        List<PrebuiltLibrary> librarySpecs = Lists.newArrayList();
-        collectLocalComponents(projectModel, componentName, librarySpecs);
+    public Collection<VariantComponent> resolveCandidates(ModelRegistry projectModel, String libraryName) {
+        List<VariantComponent> librarySpecs = Lists.newArrayList();
+        collectLocalComponents(projectModel, libraryName, librarySpecs);
         if (librarySpecs.isEmpty()) {
-            return null;
+            return Collections.emptyList();
         }
-        return LibraryResolutionResult.of(NativeLibraryBinary.class, librarySpecs, componentName, binarySpecPredicate);
+        return librarySpecs;
     }
 
-    private void collectLocalComponents(ModelRegistry projectModel, String componentName, List<PrebuiltLibrary> librarySpecs) {
+    private void collectLocalComponents(ModelRegistry projectModel, String componentName, List<VariantComponent> librarySpecs) {
         ModelMap<PrebuiltLibraries> prebuiltLibraries = projectModel.find("repositories", PREBUILT_LIBRARIES_TYPE);
         if (prebuiltLibraries != null) {
             for (PrebuiltLibraries repository : prebuiltLibraries) {

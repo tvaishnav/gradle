@@ -34,6 +34,7 @@ import org.gradle.api.internal.resolve.VariantChooser;
 import org.gradle.internal.service.ServiceRegistration;
 import org.gradle.internal.service.ServiceRegistry;
 import org.gradle.internal.service.scopes.PluginServiceRegistry;
+import org.gradle.nativeplatform.NativeBinary;
 import org.gradle.nativeplatform.NativeBinarySpec;
 import org.gradle.nativeplatform.internal.NativeBinaryRenderer;
 import org.gradle.nativeplatform.internal.NativeExecutableBinaryRenderer;
@@ -102,7 +103,9 @@ public class NativeBinaryServices implements PluginServiceRegistry {
             LibraryResolutionErrorMessageBuilder errorMessageBuilder = new NativeLibraryResolutionErrorMessageBuilder();
             LocalLibraryDependencyResolver delegate =
                     new LocalLibraryDependencyResolver(
-                            new DefaultLocalLibraryResolver(projectModelResolver, NativeBinarySpec.class),
+                            NativeBinary.class,
+                            projectModelResolver,
+                            new DefaultLocalLibraryResolver(),
                             variantChooser,
                             libraryMetaDataAdapter,
                         errorMessageBuilder

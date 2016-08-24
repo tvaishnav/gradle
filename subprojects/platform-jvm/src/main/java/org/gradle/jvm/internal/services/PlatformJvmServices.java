@@ -98,7 +98,9 @@ public class PlatformJvmServices implements PluginServiceRegistry {
             JvmLocalLibraryMetaDataAdapter libraryMetaDataAdapter = new JvmLocalLibraryMetaDataAdapter();
             LocalLibraryDependencyResolver delegate =
                     new LocalLibraryDependencyResolver(
-                            new DefaultLocalLibraryResolver(projectModelResolver, JvmBinarySpec.class),
+                            JvmBinarySpec.class,
+                            projectModelResolver,
+                            new DefaultLocalLibraryResolver(),
                             variantChooser,
                             libraryMetaDataAdapter,
                             new DefaultLibraryResolutionErrorMessageBuilder(variants, schemaStore)

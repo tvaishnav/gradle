@@ -15,6 +15,10 @@
  */
 package org.gradle.api.internal.resolve;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import org.gradle.api.Nullable;
+import org.gradle.api.UnknownProjectException;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.LibraryBinaryIdentifier;
 import org.gradle.api.artifacts.component.LibraryComponentSelector;
@@ -38,6 +42,7 @@ import org.gradle.internal.resolve.result.BuildableComponentArtifactsResolveResu
 import org.gradle.internal.resolve.result.BuildableComponentIdResolveResult;
 import org.gradle.internal.resolve.result.BuildableComponentResolveResult;
 import org.gradle.language.base.internal.resolve.LibraryResolveException;
+import org.gradle.model.internal.registry.ModelRegistry;
 import org.gradle.platform.base.Binary;
 import org.gradle.platform.base.VariantComponent;
 
@@ -49,15 +54,33 @@ public class LocalLibraryDependencyResolver implements DependencyToComponentIdRe
     private final LibraryResolutionErrorMessageBuilder errorMessageBuilder;
     private final LocalLibraryMetaDataAdapter libraryMetaDataAdapter;
     private final LocalLibraryResolver libraryResolver;
+    private final Class<? extends Binary> binaryType;
+    private final Predicate<VariantComponent> binaryPredicate;
+    private final ProjectModelResolver projectModelResolver;
 
-    public LocalLibraryDependencyResolver(LocalLibraryResolver libraryResolver,
+    public LocalLibraryDependencyResolver(final Class<? extends Binary> binaryType,
+                                          ProjectModelResolver projectModelResolver,
+                                          LocalLibraryResolver libraryResolver,
                                           VariantChooser variantChooser,
                                           LocalLibraryMetaDataAdapter libraryMetaDataAdapter,
                                           LibraryResolutionErrorMessageBuilder errorMessageBuilder) {
         this.libraryMetaDataAdapter = libraryMetaDataAdapter;
         this.variantChooser = variantChooser;
         this.errorMessageBuilder = errorMessageBuilder;
+        this.projectModelResolver = projectModelResolver;
         this.libraryResolver = libraryResolver;
+        this.binaryType = binaryType;
+        this.binaryPredicate = new Predicate<VariantComponent>() {
+            @Override
+            public boolean apply(VariantComponent input) {
+                return Iterables.any(input.getVariants(), new Predicate<Binary>() {
+                    @Override
+                    public boolean apply(Binary input) {
+                        return binaryType.isAssignableFrom(input.getClass());
+                    }
+                });
+            }
+        };
     }
 
     @Override
@@ -72,7 +95,8 @@ public class LocalLibraryDependencyResolver implements DependencyToComponentIdRe
         final String selectorProjectPath = selector.getProjectPath();
         final String libraryName = selector.getLibraryName();
         final String variant = selector.getVariant();
-        LibraryResolutionResult resolutionResult = libraryResolver.resolve(selectorProjectPath, libraryName);
+        LibraryResolutionResult resolutionResult = doResolve(selectorProjectPath, libraryName);
+
         VariantComponent selectedLibrary = resolutionResult.getSelectedLibrary();
         if (selectedLibrary == null) {
             String message = resolutionResult.toResolutionErrorMessage(selector);
@@ -99,6 +123,20 @@ public class LocalLibraryDependencyResolver implements DependencyToComponentIdRe
                 metaData = libraryMetaDataAdapter.createLocalComponentMetaData(selectedBinary, selectorProjectPath, true);
             }
             result.resolved(metaData);
+        }
+    }
+
+    @Nullable
+    private LibraryResolutionResult doResolve(String selectorProjectPath, String libraryName) {
+        try {
+            ModelRegistry projectModel = projectModelResolver.resolveProjectModel(selectorProjectPath);
+            Collection<VariantComponent> candidates = libraryResolver.resolveCandidates(projectModel, libraryName);
+            if (candidates.isEmpty()) {
+                return LibraryResolutionResult.emptyResolutionResult(binaryType);
+            }
+            return LibraryResolutionResult.of(binaryType, candidates, libraryName, binaryPredicate);
+        } catch (UnknownProjectException e) {
+            return LibraryResolutionResult.projectNotFound(binaryType);
         }
     }
 
