@@ -16,7 +16,7 @@
 package org.gradle.internal.component.local.model;
 
 import com.google.common.base.Objects;
-import org.gradle.api.Nullable;
+import org.gradle.api.Project;
 import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
@@ -26,24 +26,20 @@ public class DefaultProjectComponentSelector implements ProjectComponentSelector
     private final BuildIdentifier build;
     private final String projectPath;
 
-    private DefaultProjectComponentSelector(String projectPath) {
-        this(null, projectPath);
-    }
-
     private DefaultProjectComponentSelector(BuildIdentifier build, String projectPath) {
+        assert build != null : "build cannot be null";
         assert projectPath != null : "project path cannot be null";
         this.build = build;
         this.projectPath = projectPath;
     }
 
     public String getDisplayName() {
-        if (build != null) {
+        if (!build.isExecutingBuild()) {
             return "project " + build.getName() + ":" + projectPath;
         }
         return "project " + projectPath;
     }
 
-    @Nullable
     @Override
     public BuildIdentifier getBuild() {
         return build;
@@ -89,12 +85,16 @@ public class DefaultProjectComponentSelector implements ProjectComponentSelector
     }
 
     public static ProjectComponentSelector newSelector(String projectPath) {
-        return new DefaultProjectComponentSelector(projectPath);
+        return new DefaultProjectComponentSelector(new CurrentBuildIdentifier(), projectPath);
+    }
+
+    public static ProjectComponentSelector newSelector(Project project) {
+        return newSelector(project.getPath());
     }
 
     public static ProjectComponentSelector newSelector(String build, String projectPath) {
         if (build == null) {
-            return new DefaultProjectComponentSelector(null, projectPath);
+            return newSelector(projectPath);
         }
         return new DefaultProjectComponentSelector(new DefaultBuildIdentifier(build), projectPath);
     }

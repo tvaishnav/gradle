@@ -41,7 +41,7 @@ public class IdeProjectDependency extends IdeDependency {
     }
 
     private static String determineName(ProjectComponentIdentifier projectId) {
-        assert projectId.getBuild() != null;
+        assert !projectId.getBuild().isExecutingBuild();
         String projectPath = projectId.getProjectPath();
         if (projectPath.equals(":")) {
             return projectId.getBuild().getName();

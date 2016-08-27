@@ -16,14 +16,22 @@
 
 package org.gradle.api.artifacts.component;
 
+import org.gradle.api.Incubating;
+
 /**
  * Identifies a Gradle build.
  */
+@Incubating
 public interface BuildIdentifier {
     /**
      * The name of the build.
      */
     String getName();
+
+    /**
+     * Is this build the one that's currently executing?
+     */
+    boolean isExecutingBuild();
 
     // TODO:DAZ Add the root directory.
 }

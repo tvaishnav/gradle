@@ -53,7 +53,8 @@ public class DefaultProjectLocalComponentProvider implements ProjectLocalCompone
     }
 
     private boolean isLocalProject(ProjectComponentIdentifier projectIdentifier) {
-        return projectIdentifier.getBuild() == null
+        // TODO:DAZ Do we need the second check?
+        return projectIdentifier.getBuild().isExecutingBuild()
             || projectIdentifier.getBuild().getName().equals(projectRegistry.getProject(":").getName());
     }
 

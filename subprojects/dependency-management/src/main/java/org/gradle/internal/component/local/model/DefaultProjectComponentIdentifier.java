@@ -16,7 +16,6 @@
 package org.gradle.internal.component.local.model;
 
 import com.google.common.base.Objects;
-import org.gradle.api.Nullable;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
@@ -27,13 +26,10 @@ public class DefaultProjectComponentIdentifier implements ProjectComponentIdenti
     private final String projectPath;
     private final String displayName;
 
-    private DefaultProjectComponentIdentifier(String projectPath) {
-        this(null, projectPath);
-    }
-
     private DefaultProjectComponentIdentifier(BuildIdentifier buildIdentifier, String projectPath) {
-        this.buildIdentifier = buildIdentifier;
+        assert buildIdentifier != null : "build cannot be null";
         assert projectPath != null : "project path cannot be null";
+        this.buildIdentifier = buildIdentifier;
         this.projectPath = projectPath;
         displayName = "project " + fullPath(this);
     }
@@ -42,7 +38,6 @@ public class DefaultProjectComponentIdentifier implements ProjectComponentIdenti
         return displayName;
     }
 
-    @Nullable
     @Override
     public BuildIdentifier getBuild() {
         return buildIdentifier;
@@ -77,11 +72,11 @@ public class DefaultProjectComponentIdentifier implements ProjectComponentIdenti
     }
 
     public static String fullPath(ProjectComponentIdentifier projectId) {
-        return projectId.getBuild() == null ? projectId.getProjectPath() : projectId.getBuild().getName() + ":" + projectId.getProjectPath();
+        return projectId.getBuild().isExecutingBuild() ? projectId.getProjectPath() : projectId.getBuild().getName() + ":" + projectId.getProjectPath();
     }
 
     public static ProjectComponentIdentifier newProjectId(String projectPath) {
-        return new DefaultProjectComponentIdentifier(projectPath);
+        return new DefaultProjectComponentIdentifier(new CurrentBuildIdentifier(), projectPath);
     }
 
     public static ProjectComponentIdentifier newProjectId(String build, String projectPath) {
@@ -97,7 +92,7 @@ public class DefaultProjectComponentIdentifier implements ProjectComponentIdenti
     }
 
     public static ProjectComponentIdentifier newProjectId(Project project) {
-        return new DefaultProjectComponentIdentifier(project.getPath());
+        return newProjectId(project.getPath());
     }
 
     public static ProjectComponentIdentifier rootId(ProjectComponentIdentifier projectComponentIdentifier) {

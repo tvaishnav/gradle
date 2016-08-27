@@ -19,12 +19,8 @@ package org.gradle.internal.component.local.model;
 import com.google.common.base.Objects;
 import org.gradle.api.artifacts.component.BuildIdentifier;
 
-public class DefaultBuildIdentifier implements BuildIdentifier {
-    private final String name;
-
-    public DefaultBuildIdentifier(String name) {
-        this.name = name;
-    }
+public class CurrentBuildIdentifier implements BuildIdentifier {
+    private final String name = ":";
 
     @Override
     public String getName() {
@@ -33,7 +29,7 @@ public class DefaultBuildIdentifier implements BuildIdentifier {
 
     @Override
     public boolean isExecutingBuild() {
-        return false;
+        return true;
     }
 
     @Override
@@ -41,10 +37,10 @@ public class DefaultBuildIdentifier implements BuildIdentifier {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof DefaultBuildIdentifier)) {
+        if (!(o instanceof CurrentBuildIdentifier)) {
             return false;
         }
-        DefaultBuildIdentifier that = (DefaultBuildIdentifier) o;
+        CurrentBuildIdentifier that = (CurrentBuildIdentifier) o;
         return Objects.equal(name, that.name);
     }
 
@@ -55,6 +51,6 @@ public class DefaultBuildIdentifier implements BuildIdentifier {
 
     @Override
     public String toString() {
-        return "Build '" + name + "'";
+        return "Current build";
     }
 }

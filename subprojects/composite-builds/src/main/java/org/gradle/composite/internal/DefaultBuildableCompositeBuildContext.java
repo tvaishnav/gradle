@@ -158,7 +158,7 @@ public class DefaultBuildableCompositeBuildContext implements CompositeBuildCont
     }
 
     private IncludedBuildInternal getBuild(ProjectComponentIdentifier projectId) {
-        if (projectId.getBuild() == null) {
+        if (projectId.getBuild().isExecutingBuild()) {
             return null;
         }
         return (IncludedBuildInternal) includedBuilds.getBuild(projectId.getBuild().getName());

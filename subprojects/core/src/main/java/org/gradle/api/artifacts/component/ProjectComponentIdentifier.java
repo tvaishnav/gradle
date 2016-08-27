@@ -16,7 +16,6 @@
 package org.gradle.api.artifacts.component;
 
 import org.gradle.api.Incubating;
-import org.gradle.api.Nullable;
 
 /**
  * An identifier for a component instance that is built as part of the current build.
@@ -27,11 +26,9 @@ import org.gradle.api.Nullable;
 public interface ProjectComponentIdentifier extends ComponentIdentifier {
     /**
      * Identifies the build that contains the project component.
-     * If null, this identifier can only be used to identify a component within a single build.
      *
      * @return The build identifier
      */
-    @Nullable
     BuildIdentifier getBuild();
 
     /**

@@ -45,21 +45,14 @@ class DefaultIncludedBuildExecuter implements IncludedBuildExecuter {
     }
 
     @Override
-    public void execute(ProjectComponentIdentifier buildIdentifier, Iterable<String> taskNames) {
-        BuildIdentifier build = getBuildId(buildIdentifier);
+    public void execute(ProjectComponentIdentifier projectId, Iterable<String> taskNames) {
+        BuildIdentifier build = projectId.getBuild();
         buildStarted(build);
         try {
             doBuild(build, taskNames);
         } finally {
             buildCompleted(build);
         }
-    }
-
-    private BuildIdentifier getBuildId(ProjectComponentIdentifier buildIdentifier) {
-        if (buildIdentifier.getBuild() == null) {
-            throw new IllegalArgumentException(buildIdentifier + " is not a build identifier");
-        }
-        return buildIdentifier.getBuild();
     }
 
     private synchronized void buildStarted(BuildIdentifier build) {
