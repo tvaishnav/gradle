@@ -19,6 +19,7 @@ package org.gradle.nativeplatform;
 import org.gradle.api.Incubating;
 import org.gradle.api.artifacts.component.LibraryBinaryIdentifier;
 import org.gradle.api.file.FileCollection;
+import org.gradle.platform.base.DependencySpecContainer;
 
 /**
  * A physical representation of a {@link NativeLibrary} component.
@@ -33,4 +34,6 @@ public interface NativeLibraryBinary extends NativeBinary {
     FileCollection getRuntimeFiles();
 
     LibraryBinaryIdentifier getId();
+
+    DependencySpecContainer getDependencies();
 }

@@ -20,7 +20,8 @@ import org.gradle.language.nativeplatform.DependentSourceSet;
 
 import java.io.File;
 
-public interface DependentSourceSetInternal extends DependentSourceSet {
+// TODO: Combine native DependentSourceSet with base once dependency handling has been collapsed together
+public interface DependentSourceSetInternal extends DependentSourceSet, org.gradle.language.base.DependentSourceSet {
     File getPrefixHeaderFile();
 
     void setPrefixHeaderFile(File prefixHeaderFile);

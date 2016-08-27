@@ -34,7 +34,6 @@ import org.gradle.platform.base.Binary;
 import org.gradle.platform.base.DependencySpec;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.Map;
 
 import static org.gradle.language.base.internal.model.DefaultLibraryLocalComponentMetadata.newResolvedLibraryMetadata;
@@ -102,8 +101,11 @@ public class NativeLocalLibraryMetaDataAdapter implements LocalLibraryMetaDataAd
         configurations.put(RUN, new DefaultTaskDependency().add(library.getRuntimeFiles()));
 
         // TODO:DAZ For transitive dependency resolution, include dependencies from lib
-        Map<String, Iterable<DependencySpec>> dependencies;
-        dependencies = Collections.emptyMap();
+        Map<String, Iterable<DependencySpec>> dependencies = Maps.newLinkedHashMap();
+        dependencies.put(COMPILE, library.getDependencies().getDependencies());
+        dependencies.put(LINK, library.getDependencies().getDependencies());
+        dependencies.put(RUN, library.getDependencies().getDependencies());
+
         return newResolvedLibraryMetadata(id, configurations, dependencies, projectPath);
     }
 }

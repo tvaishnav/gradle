@@ -22,9 +22,12 @@ import org.gradle.nativeplatform.BuildType;
 import org.gradle.nativeplatform.Flavor;
 import org.gradle.nativeplatform.NativeLibraryBinary;
 import org.gradle.nativeplatform.PrebuiltLibrary;
+import org.gradle.nativeplatform.internal.NativeDependencySpecContainer;
 import org.gradle.nativeplatform.platform.NativePlatform;
+import org.gradle.platform.base.DependencySpecContainer;
 
 import java.io.File;
+import java.util.Collections;
 
 public abstract class AbstractPrebuiltLibraryBinary implements NativeLibraryBinary {
     private final String name;
@@ -80,5 +83,10 @@ public abstract class AbstractPrebuiltLibraryBinary implements NativeLibraryBina
 
     protected FileCollection createFileCollection(File file, String fileCollectionDisplayName, String fileDescription) {
         return fileCollectionFactory.fixed(fileCollectionDisplayName + " for " + AbstractPrebuiltLibraryBinary.this.getDisplayName(), file);
+    }
+
+    @Override
+    public DependencySpecContainer getDependencies() {
+        return new NativeDependencySpecContainer(Collections.emptyList());
     }
 }

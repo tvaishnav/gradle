@@ -32,6 +32,7 @@ import org.gradle.nativeplatform.SharedLibraryBinary;
 import org.gradle.nativeplatform.StaticLibraryBinary;
 import org.gradle.nativeplatform.platform.NativePlatform;
 import org.gradle.platform.base.Binary;
+import org.gradle.platform.base.DependencySpecContainer;
 import org.gradle.platform.base.VariantComponent;
 
 import java.util.Collection;
@@ -154,6 +155,11 @@ public class NativeVariantSelector implements VariantSelector {
         @Override
         public BuildType getBuildType() {
             return sharedLibraryBinary.getBuildType();
+        }
+
+        @Override
+        public DependencySpecContainer getDependencies() {
+            return sharedLibraryBinary.getDependencies();
         }
     }
 }

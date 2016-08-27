@@ -17,6 +17,8 @@ package org.gradle.language.nativeplatform.internal;
 
 import org.gradle.language.base.LanguageSourceSet;
 import org.gradle.language.nativeplatform.HeaderExportingSourceSet;
+import org.gradle.nativeplatform.internal.NativeDependencySpecContainer;
+import org.gradle.platform.base.DependencySpecContainer;
 import org.gradle.util.CollectionUtils;
 
 import java.io.File;
@@ -47,6 +49,11 @@ public abstract class AbstractHeaderExportingDependentSourceSet extends Abstract
         } else {
             libs.add(library);
         }
+    }
+
+    @Override
+    public DependencySpecContainer getDependencies() {
+        return new NativeDependencySpecContainer(libs);
     }
 
     @Override

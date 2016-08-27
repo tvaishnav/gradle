@@ -19,13 +19,18 @@ package org.gradle.nativeplatform.internal;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.file.FileCollectionFactory;
 import org.gradle.language.nativeplatform.DependentSourceSet;
-import org.gradle.nativeplatform.*;
+import org.gradle.nativeplatform.BuildType;
+import org.gradle.nativeplatform.Flavor;
+import org.gradle.nativeplatform.NativeBinarySpec;
+import org.gradle.nativeplatform.NativeDependencySet;
+import org.gradle.nativeplatform.NativeLibraryBinary;
+import org.gradle.nativeplatform.Tool;
 import org.gradle.nativeplatform.internal.resolve.NativeDependencyResolver;
 import org.gradle.nativeplatform.platform.NativePlatform;
 import org.gradle.nativeplatform.toolchain.NativeToolChain;
 import org.gradle.nativeplatform.toolchain.internal.PlatformToolProvider;
 import org.gradle.nativeplatform.toolchain.internal.PreCompiledHeader;
-import org.gradle.platform.base.DependencySpec;
+import org.gradle.platform.base.DependencySpecContainer;
 import org.gradle.platform.base.internal.BinarySpecInternal;
 
 import java.io.File;
@@ -67,5 +72,5 @@ public interface NativeBinarySpecInternal extends NativeBinarySpec, BinarySpecIn
 
     void addPreCompiledHeaderFor(DependentSourceSet sourceSet);
 
-    Map<String,Iterable<DependencySpec>> getDependencySpecs();
+    DependencySpecContainer getDependencies();
 }
