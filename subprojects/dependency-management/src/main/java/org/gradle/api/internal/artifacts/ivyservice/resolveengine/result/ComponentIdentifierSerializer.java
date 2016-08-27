@@ -16,6 +16,7 @@
 
 package org.gradle.api.internal.artifacts.ivyservice.resolveengine.result;
 
+import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.LibraryBinaryIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
@@ -36,7 +37,7 @@ public class ComponentIdentifierSerializer implements Serializer<ComponentIdenti
         byte id = decoder.readByte();
 
         if(Implementation.BUILD.getId() == id) {
-            return newProjectId(decoder.readString());
+            return newProjectId(decoder.readNullableString(), decoder.readString());
         } else if(Implementation.MODULE.getId() == id) {
             return new DefaultModuleComponentIdentifier(decoder.readString(), decoder.readString(), decoder.readString());
         } else if (Implementation.LIBRARY.getId() == id) {
@@ -60,6 +61,8 @@ public class ComponentIdentifierSerializer implements Serializer<ComponentIdenti
         } else if(value instanceof DefaultProjectComponentIdentifier) {
             ProjectComponentIdentifier projectComponentIdentifier = (ProjectComponentIdentifier)value;
             encoder.writeByte(Implementation.BUILD.getId());
+            BuildIdentifier build = projectComponentIdentifier.getBuild();
+            encoder.writeNullableString(build == null ? null : build.getName());
             encoder.writeString(projectComponentIdentifier.getProjectPath());
         } else if(value instanceof DefaultLibraryBinaryIdentifier) {
             LibraryBinaryIdentifier libraryIdentifier = (LibraryBinaryIdentifier)value;

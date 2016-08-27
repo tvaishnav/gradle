@@ -60,7 +60,7 @@ public class IncludedBuildDependencyMetadataBuilder {
         ProjectComponentIdentifier originalIdentifier = newProjectId(project);
         DefaultLocalComponentMetadata originalComponent = (DefaultLocalComponentMetadata) localComponentRegistry.getComponent(originalIdentifier);
 
-        ProjectComponentIdentifier componentIdentifier = newProjectId(buildName, originalIdentifier);
+        ProjectComponentIdentifier componentIdentifier = newProjectId(buildName, project.getPath());
         LocalComponentMetadata compositeComponent = createCompositeCopy(buildName, componentIdentifier, originalComponent);
 
         context.register(componentIdentifier, compositeComponent, project.getProjectDir());
@@ -91,8 +91,7 @@ public class IncludedBuildDependencyMetadataBuilder {
         for (LocalOriginDependencyMetadata dependency : originalComponentMetadata.getDependencies()) {
             if (dependency.getSelector() instanceof ProjectComponentSelector) {
                 ProjectComponentSelector requested = (ProjectComponentSelector) dependency.getSelector();
-                ProjectComponentSelector externalizedSelector = DefaultProjectComponentSelector.newSelector(buildName, requested);
-                dependency = dependency.withTarget(externalizedSelector);
+                dependency = dependency.withTarget(DefaultProjectComponentSelector.newSelector(buildName, requested));
             }
             compositeComponentMetadata.addDependency(dependency);
         }

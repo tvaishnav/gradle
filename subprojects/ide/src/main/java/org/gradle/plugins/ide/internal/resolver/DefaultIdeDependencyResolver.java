@@ -45,6 +45,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.gradle.internal.component.local.model.DefaultProjectComponentIdentifier.fullPath;
+
 public class DefaultIdeDependencyResolver implements IdeDependencyResolver {
     /**
      * Gets IDE project dependencies.
@@ -69,7 +71,7 @@ public class DefaultIdeDependencyResolver implements IdeDependencyResolver {
             if (thisProjectId.equals(projectId)) {
                 continue;
             }
-            Project resolvedProject = project.findProject(projectId.getProjectPath());
+            Project resolvedProject = project.findProject(fullPath(projectId));
             if (resolvedProject == null) {
                 ideProjectDependencies.add(new IdeProjectDependency(projectId));
             } else {

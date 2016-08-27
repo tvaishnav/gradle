@@ -16,6 +16,7 @@
 package org.gradle.api.artifacts.component;
 
 import org.gradle.api.Incubating;
+import org.gradle.api.Nullable;
 
 /**
  * Criteria for selecting a component instance that is built as part of the current build.
@@ -24,6 +25,15 @@ import org.gradle.api.Incubating;
  */
 @Incubating
 public interface ProjectComponentSelector extends ComponentSelector {
+    /**
+     * Identifies the build to select a project from.
+     * If null, a project will be selected from the current build.
+     *
+     * @return The build identifier
+     */
+    @Nullable
+    BuildIdentifier getBuild();
+
     /**
      * The path of the project to select the component from.
      *

@@ -40,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.gradle.internal.component.local.model.DefaultProjectComponentIdentifier.fullPath;
+
 public class DefaultBuildableCompositeBuildContext implements CompositeBuildContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultBuildableCompositeBuildContext.class);
 
@@ -83,7 +85,7 @@ public class DefaultBuildableCompositeBuildContext implements CompositeBuildCont
     @Override
     public void registerSubstitution(ModuleVersionIdentifier moduleId, ProjectComponentIdentifier project) {
         if (projects.contains(project)) {
-            String failureMessage = String.format("Project path '%s' is not unique in composite.", project.getProjectPath());
+            String failureMessage = String.format("Project path '%s' is not unique in composite.", fullPath(project));
             throw new GradleException(failureMessage);
         }
         LOGGER.info("Registering project '" + project + "' in composite build. Will substitute for module '" + moduleId.getModule() + "'.");
@@ -98,7 +100,7 @@ public class DefaultBuildableCompositeBuildContext implements CompositeBuildCont
 
     public void register(ProjectComponentIdentifier project, LocalComponentMetadata localComponentMetadata, File projectDirectory) {
         if (projectMetadata.containsKey(project)) {
-            String failureMessage = String.format("Project path '%s' is not unique in composite.", project.getProjectPath());
+            String failureMessage = String.format("Project path '%s' is not unique in composite.", fullPath(project));
             throw new GradleException(failureMessage);
         }
         projectMetadata.put(project, new RegisteredProject(localComponentMetadata, projectDirectory));
@@ -155,12 +157,11 @@ public class DefaultBuildableCompositeBuildContext implements CompositeBuildCont
         ensureRegistered(build);
     }
 
-    private IncludedBuildInternal getBuild(ProjectComponentIdentifier projectComponentIdentifier) {
-        String[] split = projectComponentIdentifier.getProjectPath().split("::", 2);
-        if (split.length == 1) {
+    private IncludedBuildInternal getBuild(ProjectComponentIdentifier projectId) {
+        if (projectId.getBuild() == null) {
             return null;
         }
-        return (IncludedBuildInternal) includedBuilds.getBuild(split[0]);
+        return (IncludedBuildInternal) includedBuilds.getBuild(projectId.getBuild().getName());
     }
 
     private void ensureRegistered(IncludedBuildInternal build) {

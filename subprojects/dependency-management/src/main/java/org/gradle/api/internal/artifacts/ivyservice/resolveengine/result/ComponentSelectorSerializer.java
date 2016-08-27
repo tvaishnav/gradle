@@ -31,7 +31,7 @@ public class ComponentSelectorSerializer implements Serializer<ComponentSelector
         byte id = decoder.readByte();
 
         if (Implementation.BUILD.getId() == id) {
-            return DefaultProjectComponentSelector.newSelector(decoder.readString());
+            return DefaultProjectComponentSelector.newSelector(decoder.readNullableString(), decoder.readString());
         } else if (Implementation.MODULE.getId() == id) {
             return new DefaultModuleComponentSelector(decoder.readString(), decoder.readString(), decoder.readString());
         } else if (Implementation.LIBRARY.getId() == id) {
@@ -55,6 +55,8 @@ public class ComponentSelectorSerializer implements Serializer<ComponentSelector
         } else if (value instanceof DefaultProjectComponentSelector) {
             ProjectComponentSelector projectComponentSelector = (ProjectComponentSelector) value;
             encoder.writeByte(Implementation.BUILD.getId());
+            BuildIdentifier build = projectComponentSelector.getBuild();
+            encoder.writeNullableString(build == null ? null : build.getName());
             encoder.writeString(projectComponentSelector.getProjectPath());
         } else if (value instanceof DefaultLibraryComponentSelector) {
             LibraryComponentSelector libraryComponentSelector = (LibraryComponentSelector) value;

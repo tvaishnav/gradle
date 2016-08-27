@@ -15,22 +15,37 @@
  */
 package org.gradle.internal.component.local.model;
 
+import com.google.common.base.Objects;
+import org.gradle.api.Nullable;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentSelector;
 
 public class DefaultProjectComponentIdentifier implements ProjectComponentIdentifier {
+    private final BuildIdentifier buildIdentifier;
     private final String projectPath;
     private final String displayName;
 
     private DefaultProjectComponentIdentifier(String projectPath) {
+        this(null, projectPath);
+    }
+
+    private DefaultProjectComponentIdentifier(BuildIdentifier buildIdentifier, String projectPath) {
+        this.buildIdentifier = buildIdentifier;
         assert projectPath != null : "project path cannot be null";
         this.projectPath = projectPath;
-        displayName = "project " + projectPath;
+        displayName = "project " + fullPath(this);
     }
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    @Nullable
+    @Override
+    public BuildIdentifier getBuild() {
+        return buildIdentifier;
     }
 
     public String getProjectPath() {
@@ -47,17 +62,13 @@ public class DefaultProjectComponentIdentifier implements ProjectComponentIdenti
         }
 
         DefaultProjectComponentIdentifier that = (DefaultProjectComponentIdentifier) o;
-
-        if (!projectPath.equals(that.projectPath)) {
-            return false;
-        }
-
-        return true;
+        return Objects.equal(projectPath, that.projectPath)
+            && Objects.equal(buildIdentifier, that.buildIdentifier);
     }
 
     @Override
     public int hashCode() {
-        return projectPath.hashCode();
+        return Objects.hashCode(projectPath, buildIdentifier);
     }
 
     @Override
@@ -65,20 +76,24 @@ public class DefaultProjectComponentIdentifier implements ProjectComponentIdenti
         return displayName;
     }
 
+    public static String fullPath(ProjectComponentIdentifier projectId) {
+        return projectId.getBuild() == null ? projectId.getProjectPath() : projectId.getBuild().getName() + ":" + projectId.getProjectPath();
+    }
+
     public static ProjectComponentIdentifier newProjectId(String projectPath) {
         return new DefaultProjectComponentIdentifier(projectPath);
     }
 
     public static ProjectComponentIdentifier newProjectId(String build, String projectPath) {
-        return new DefaultProjectComponentIdentifier(build + ":" + projectPath);
-    }
-
-    public static ProjectComponentIdentifier newProjectId(String build, ProjectComponentIdentifier projectId) {
-        return new DefaultProjectComponentIdentifier(build + ":" + projectId.getProjectPath());
+        if (build == null) {
+            return newProjectId(projectPath);
+        }
+        BuildIdentifier buildIdentifier = new DefaultBuildIdentifier(build);
+        return new DefaultProjectComponentIdentifier(buildIdentifier, projectPath);
     }
 
     public static ProjectComponentIdentifier newProjectId(ProjectComponentSelector selector) {
-        return new DefaultProjectComponentIdentifier(selector.getProjectPath());
+        return new DefaultProjectComponentIdentifier(selector.getBuild(), selector.getProjectPath());
     }
 
     public static ProjectComponentIdentifier newProjectId(Project project) {
@@ -86,11 +101,6 @@ public class DefaultProjectComponentIdentifier implements ProjectComponentIdenti
     }
 
     public static ProjectComponentIdentifier rootId(ProjectComponentIdentifier projectComponentIdentifier) {
-        String path = projectComponentIdentifier.getProjectPath();
-        if (path.contains("::")) {
-            String buildName = path.split("::", 2)[0];
-            return newProjectId(buildName, ":");
-        }
-        return newProjectId(":");
+        return new DefaultProjectComponentIdentifier(projectComponentIdentifier.getBuild(), ":");
     }
 }
