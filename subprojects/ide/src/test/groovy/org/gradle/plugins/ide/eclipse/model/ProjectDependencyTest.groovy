@@ -17,6 +17,8 @@ package org.gradle.plugins.ide.eclipse.model
 
 import spock.lang.Specification
 
+import static org.gradle.internal.component.local.model.DefaultProjectComponentIdentifier.newProjectId
+
 
 class ProjectDependencyTest extends Specification {
     final static String XML_TEXT = '''
@@ -56,7 +58,7 @@ class ProjectDependencyTest extends Specification {
     }
 
     private ProjectDependency createProjectDependency() {
-        ProjectDependency dependency = new ProjectDependency('/test2', null)
+        ProjectDependency dependency = new ProjectDependency('/test2', newProjectId(":"))
         dependency.exported = true
         dependency.nativeLibraryLocation = 'mynative'
         dependency.accessRules += [new AccessRule('nonaccessible', 'secret**')]

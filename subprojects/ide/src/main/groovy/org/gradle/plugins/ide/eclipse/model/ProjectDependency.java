@@ -18,6 +18,8 @@ package org.gradle.plugins.ide.eclipse.model;
 
 import com.google.common.base.Preconditions;
 import groovy.util.Node;
+import org.gradle.api.Incubating;
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 
 /**
  * A classpath entry representing a project dependency.
@@ -25,24 +27,32 @@ import groovy.util.Node;
 public class ProjectDependency extends AbstractClasspathEntry {
 
     private String gradlePath;
+    private ProjectComponentIdentifier projectId;
 
     public ProjectDependency(Node node) {
         super(node);
         assertPathIsValid();
     }
 
-    public ProjectDependency(String path, String gradlePath) {
+    public ProjectDependency(String path, ProjectComponentIdentifier projectId) {
         super(path);
         assertPathIsValid();
-        this.gradlePath = gradlePath;
+        this.projectId = projectId;
+        this.gradlePath = projectId.getProjectPath();
     }
 
     public String getGradlePath() {
         return gradlePath;
     }
 
+    @Deprecated
     public void setGradlePath(String gradlePath) {
         this.gradlePath = gradlePath;
+    }
+
+    @Incubating
+    public ProjectComponentIdentifier getGradleProjectId() {
+        return projectId;
     }
 
     private void assertPathIsValid() {
