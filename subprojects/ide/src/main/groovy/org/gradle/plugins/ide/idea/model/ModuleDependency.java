@@ -32,7 +32,6 @@ public class ModuleDependency implements Dependency {
 
     private String name;
     private String scope;
-    private ProjectComponentIdentifier gradlePath;
     private ProjectComponentIdentifier gradleProjectId;
     private boolean exported;
 
