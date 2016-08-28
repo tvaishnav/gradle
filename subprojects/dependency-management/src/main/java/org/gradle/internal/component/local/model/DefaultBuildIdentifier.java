@@ -32,7 +32,7 @@ public class DefaultBuildIdentifier implements BuildIdentifier {
     }
 
     @Override
-    public boolean isExecutingBuild() {
+    public boolean isCurrentBuild() {
         return false;
     }
 

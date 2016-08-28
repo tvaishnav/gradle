@@ -34,7 +34,7 @@ public class DefaultProjectComponentSelector implements ProjectComponentSelector
     }
 
     public String getDisplayName() {
-        if (!build.isExecutingBuild()) {
+        if (!build.isCurrentBuild()) {
             return "project " + build.getName() + ":" + projectPath;
         }
         return "project " + projectPath;

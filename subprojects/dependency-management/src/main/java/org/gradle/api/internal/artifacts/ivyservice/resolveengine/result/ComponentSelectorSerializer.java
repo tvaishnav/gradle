@@ -56,7 +56,7 @@ public class ComponentSelectorSerializer implements Serializer<ComponentSelector
             ProjectComponentSelector projectComponentSelector = (ProjectComponentSelector) value;
             encoder.writeByte(Implementation.BUILD.getId());
             BuildIdentifier build = projectComponentSelector.getBuild();
-            encoder.writeNullableString(build.isExecutingBuild() ? null : build.getName());
+            encoder.writeNullableString(build.isCurrentBuild() ? null : build.getName());
             encoder.writeString(projectComponentSelector.getProjectPath());
         } else if (value instanceof DefaultLibraryComponentSelector) {
             LibraryComponentSelector libraryComponentSelector = (LibraryComponentSelector) value;

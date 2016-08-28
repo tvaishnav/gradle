@@ -70,7 +70,7 @@ public class DefaultIdeDependencyResolver implements IdeDependencyResolver {
                 continue;
             }
             // TODO:DAZ Improve this: we should have a consistent way to determine the name of the depended-on project
-            if (!projectId.getBuild().isExecutingBuild()) {
+            if (!projectId.getBuild().isCurrentBuild()) {
                 // Don't have access to the ProjectInstance: we can't use it to determine the name.
                 ideProjectDependencies.add(new IdeProjectDependency(projectId));
             } else {

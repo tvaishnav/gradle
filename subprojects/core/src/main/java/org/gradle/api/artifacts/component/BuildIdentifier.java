@@ -31,7 +31,7 @@ public interface BuildIdentifier {
     /**
      * Is this build the one that's currently executing?
      */
-    boolean isExecutingBuild();
+    boolean isCurrentBuild();
 
     // TODO:DAZ Add the root directory.
 }

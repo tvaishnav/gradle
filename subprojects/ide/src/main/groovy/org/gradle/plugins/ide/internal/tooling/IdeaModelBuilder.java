@@ -143,7 +143,7 @@ public class IdeaModelBuilder implements ToolingModelBuilder {
                     .setExported(moduleDependency.isExported())
                     .setScope(new DefaultIdeaDependencyScope(moduleDependency.getScope()));
 
-                if (moduleDependency.getGradleProjectId().getBuild().isExecutingBuild()) {
+                if (moduleDependency.getGradleProjectId().getBuild().isCurrentBuild()) {
                     // Dependency on module in same build
                     DefaultIdeaModule targetModule = modules.get(moduleDependency.getName());
                     ideaModuleDependency

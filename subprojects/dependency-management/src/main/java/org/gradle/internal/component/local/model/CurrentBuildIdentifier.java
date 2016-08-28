@@ -28,7 +28,7 @@ public class CurrentBuildIdentifier implements BuildIdentifier {
     }
 
     @Override
-    public boolean isExecutingBuild() {
+    public boolean isCurrentBuild() {
         return true;
     }
 

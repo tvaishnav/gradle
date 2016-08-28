@@ -72,7 +72,7 @@ public class DefaultProjectComponentIdentifier implements ProjectComponentIdenti
     }
 
     public static String fullPath(ProjectComponentIdentifier projectId) {
-        return projectId.getBuild().isExecutingBuild() ? projectId.getProjectPath() : projectId.getBuild().getName() + ":" + projectId.getProjectPath();
+        return projectId.getBuild().isCurrentBuild() ? projectId.getProjectPath() : projectId.getBuild().getName() + ":" + projectId.getProjectPath();
     }
 
     public static ProjectComponentIdentifier newProjectId(String projectPath) {

@@ -62,7 +62,7 @@ public class ComponentIdentifierSerializer implements Serializer<ComponentIdenti
             ProjectComponentIdentifier projectComponentIdentifier = (ProjectComponentIdentifier)value;
             encoder.writeByte(Implementation.BUILD.getId());
             BuildIdentifier build = projectComponentIdentifier.getBuild();
-            encoder.writeNullableString(build.isExecutingBuild() ? null : build.getName());
+            encoder.writeNullableString(build.isCurrentBuild() ? null : build.getName());
             encoder.writeString(projectComponentIdentifier.getProjectPath());
         } else if(value instanceof DefaultLibraryBinaryIdentifier) {
             LibraryBinaryIdentifier libraryIdentifier = (LibraryBinaryIdentifier)value;

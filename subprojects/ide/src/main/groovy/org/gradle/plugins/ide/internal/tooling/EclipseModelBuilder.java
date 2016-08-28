@@ -185,7 +185,7 @@ public class EclipseModelBuilder implements ProjectToolingModelBuilder {
                 final ProjectDependency projectDependency = (ProjectDependency) entry;
                 final String path = StringUtils.removeStart(projectDependency.getPath(), "/");
                 DefaultEclipseProjectDependency dependency;
-                if (projectDependency.getGradleProjectId().getBuild().isExecutingBuild()) {
+                if (projectDependency.getGradleProjectId().getBuild().isCurrentBuild()) {
                     dependency = new DefaultEclipseProjectDependency(path, projectMapping.get(projectDependency.getGradlePath()), projectDependency.isExported(), createAttributes(projectDependency), createAccessRules(projectDependency));
                 } else {
                     File projectDirectory = compositeProjectMapper.getProjectDirectory(projectDependency.getGradleProjectId());
