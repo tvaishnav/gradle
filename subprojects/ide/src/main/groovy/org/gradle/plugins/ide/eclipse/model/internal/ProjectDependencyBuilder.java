@@ -39,7 +39,7 @@ public class ProjectDependencyBuilder {
     }
 
     private ProjectDependency buildProjectDependency(String name, ProjectComponentIdentifier projectId) {
-        final ProjectDependency out = new ProjectDependency("/" + name, projectId);
+        final ProjectDependency out = new ProjectDependency(projectId, "/" + name);
         out.setExported(false);
         return out;
     }

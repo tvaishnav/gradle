@@ -21,12 +21,10 @@ import org.gradle.test.fixtures.file.TestNameTestDirectoryProvider
 import org.junit.Rule
 import spock.lang.Specification
 
-import static org.gradle.internal.component.local.model.DefaultProjectComponentIdentifier.newProjectId
-
 public class ClasspathTest extends Specification {
     final fileReferenceFactory = new FileReferenceFactory()
     final customEntries = [
-        new ProjectDependency("/test2", newProjectId(":")),
+        new ProjectDependency("/test2", null),
         new Container("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"),
         new Library(fileReferenceFactory.fromPath("/apache-ant-1.7.1/lib/ant-antlr.jar")),
         new SourceFolder("src", "bin2"),

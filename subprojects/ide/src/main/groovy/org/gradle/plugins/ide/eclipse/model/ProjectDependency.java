@@ -21,12 +21,13 @@ import groovy.util.Node;
 import org.gradle.api.Incubating;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 
+import static org.gradle.internal.component.local.model.DefaultProjectComponentIdentifier.newProjectId;
+
 /**
  * A classpath entry representing a project dependency.
  */
 public class ProjectDependency extends AbstractClasspathEntry {
 
-    private String gradlePath;
     private ProjectComponentIdentifier projectId;
 
     public ProjectDependency(Node node) {
@@ -34,20 +35,29 @@ public class ProjectDependency extends AbstractClasspathEntry {
         assertPathIsValid();
     }
 
-    public ProjectDependency(String path, ProjectComponentIdentifier projectId) {
+    public ProjectDependency(String path, String gradlePath) {
+        super(path);
+        assertPathIsValid();
+        setProjectIdFromGradlePath(gradlePath);
+    }
+
+    public ProjectDependency(ProjectComponentIdentifier projectId, String path) {
         super(path);
         assertPathIsValid();
         this.projectId = projectId;
-        this.gradlePath = projectId.getProjectPath();
+    }
+
+    private void setProjectIdFromGradlePath(String gradlePath) {
+        this.projectId = gradlePath == null ? null : newProjectId(gradlePath);
     }
 
     public String getGradlePath() {
-        return gradlePath;
+        return projectId == null ? null : projectId.getProjectPath();
     }
 
     @Deprecated
     public void setGradlePath(String gradlePath) {
-        this.gradlePath = gradlePath;
+        setProjectIdFromGradlePath(gradlePath);
     }
 
     @Incubating
