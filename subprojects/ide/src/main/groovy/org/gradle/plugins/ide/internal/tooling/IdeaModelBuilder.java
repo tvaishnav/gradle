@@ -137,17 +137,26 @@ public class IdeaModelBuilder implements ToolingModelBuilder {
                 }
                 dependencies.add(defaultDependency);
             } else if (dependency instanceof ModuleDependency) {
-                ModuleDependency d = (ModuleDependency) dependency;
-                DefaultIdeaModule targetModule = modules.get(d.getName());
-                File targetProjectDirectory = targetModule == null
-                    ? compositeProjectMapper.getProjectDirectory(d.getGradleProjectId())
-                    : targetModule.getGradleProject().getProjectDirectory();
-                DefaultIdeaModuleDependency defaultDependency = new DefaultIdeaModuleDependency()
-                    .setExported(d.isExported())
-                    .setScope(new DefaultIdeaDependencyScope(d.getScope()))
-                    .setDependencyModule(targetModule)
-                    .setProjectDirectory(targetProjectDirectory);
-                dependencies.add(defaultDependency);
+                ModuleDependency moduleDependency = (ModuleDependency) dependency;
+
+                DefaultIdeaModuleDependency ideaModuleDependency = new DefaultIdeaModuleDependency()
+                    .setExported(moduleDependency.isExported())
+                    .setScope(new DefaultIdeaDependencyScope(moduleDependency.getScope()));
+
+                if (moduleDependency.getGradleProjectId().getBuild().isExecutingBuild()) {
+                    // Dependency on module in same build
+                    DefaultIdeaModule targetModule = modules.get(moduleDependency.getName());
+                    ideaModuleDependency
+                        .setDependencyModule(targetModule)
+                        .setProjectDirectory(targetModule.getGradleProject().getProjectDirectory());
+                } else {
+                    // Dependency on module from another build
+                    ideaModuleDependency
+                        .setDependencyModule(null)
+                        .setProjectDirectory(compositeProjectMapper.getProjectDirectory(moduleDependency.getGradleProjectId()));
+                }
+
+                dependencies.add(ideaModuleDependency);
             }
         }
         modules.get(ideaModule.getName()).setDependencies(dependencies);
