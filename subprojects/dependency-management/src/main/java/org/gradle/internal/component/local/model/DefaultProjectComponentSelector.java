@@ -21,12 +21,13 @@ import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentSelector;
+import org.gradle.api.initialization.IncludedBuild;
 
 public class DefaultProjectComponentSelector implements ProjectComponentSelector {
     private final BuildIdentifier build;
     private final String projectPath;
 
-    private DefaultProjectComponentSelector(BuildIdentifier build, String projectPath) {
+    public DefaultProjectComponentSelector(BuildIdentifier build, String projectPath) {
         assert build != null : "build cannot be null";
         assert projectPath != null : "project path cannot be null";
         this.build = build;
@@ -92,18 +93,18 @@ public class DefaultProjectComponentSelector implements ProjectComponentSelector
         return newSelector(project.getPath());
     }
 
-    public static ProjectComponentSelector newSelector(String build, String projectPath) {
+    public static ProjectComponentSelector newSelector(IncludedBuild build, String projectPath) {
         if (build == null) {
             return newSelector(projectPath);
         }
-        return new DefaultProjectComponentSelector(new DefaultBuildIdentifier(build), projectPath);
+        return new DefaultProjectComponentSelector(new DefaultBuildIdentifier(build.getName()), projectPath);
     }
 
     public static ProjectComponentSelector newSelector(BuildIdentifier build, String projectPath) {
         return new DefaultProjectComponentSelector(build, projectPath);
     }
 
-    public static ProjectComponentSelector newSelector(String build, ProjectComponentSelector selector) {
+    public static ProjectComponentSelector newSelector(IncludedBuild build, ProjectComponentSelector selector) {
         return newSelector(build, selector.getProjectPath());
     }
 

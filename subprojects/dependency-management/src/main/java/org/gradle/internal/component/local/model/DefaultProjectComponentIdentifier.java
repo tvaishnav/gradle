@@ -20,13 +20,14 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentSelector;
+import org.gradle.api.initialization.IncludedBuild;
 
 public class DefaultProjectComponentIdentifier implements ProjectComponentIdentifier {
     private final BuildIdentifier buildIdentifier;
     private final String projectPath;
     private final String displayName;
 
-    private DefaultProjectComponentIdentifier(BuildIdentifier buildIdentifier, String projectPath) {
+    public DefaultProjectComponentIdentifier(BuildIdentifier buildIdentifier, String projectPath) {
         assert buildIdentifier != null : "build cannot be null";
         assert projectPath != null : "project path cannot be null";
         this.buildIdentifier = buildIdentifier;
@@ -79,11 +80,11 @@ public class DefaultProjectComponentIdentifier implements ProjectComponentIdenti
         return new DefaultProjectComponentIdentifier(new CurrentBuildIdentifier(), projectPath);
     }
 
-    public static ProjectComponentIdentifier newProjectId(String build, String projectPath) {
+    public static ProjectComponentIdentifier newProjectId(IncludedBuild build, String projectPath) {
         if (build == null) {
             return newProjectId(projectPath);
         }
-        BuildIdentifier buildIdentifier = new DefaultBuildIdentifier(build);
+        BuildIdentifier buildIdentifier = new DefaultBuildIdentifier(build.getName());
         return new DefaultProjectComponentIdentifier(buildIdentifier, projectPath);
     }
 
