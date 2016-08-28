@@ -17,6 +17,7 @@
 package org.gradle.composite.internal;
 
 import com.google.common.collect.Maps;
+import org.gradle.api.GradleException;
 import org.gradle.api.initialization.IncludedBuild;
 import org.gradle.initialization.IncludedBuilds;
 
@@ -26,7 +27,12 @@ public class DefaultIncludedBuilds implements IncludedBuilds {
     private final Map<String, IncludedBuild> builds = Maps.newHashMap();
 
     public void registerBuild(IncludedBuild build) {
-        builds.put(build.getName(), build);
+        String buildName = build.getName();
+        if (builds.containsKey(buildName)) {
+            String failureMessage = "Included build '" + buildName + "' is not unique in composite.";
+            throw new GradleException(failureMessage);
+        }
+        builds.put(buildName, build);
     }
 
     @Override

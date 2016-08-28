@@ -75,7 +75,7 @@ class CompositeBuildDependencyGraphIntegrationTest extends AbstractCompositeBuil
         checkDependenciesFails()
 
         then:
-        failure.assertHasDescription("Project buildB:: is not unique in composite.")
+        failure.assertHasDescription("Included build 'buildB' is not unique in composite.")
     }
 
     def "does no substitution when no project matches external dependencies"() {
