@@ -84,7 +84,7 @@ public class DefaultProjectComponentIdentifier implements ProjectComponentIdenti
         if (build == null) {
             return newProjectId(projectPath);
         }
-        BuildIdentifier buildIdentifier = new DefaultBuildIdentifier(build.getName());
+        BuildIdentifier buildIdentifier = new DefaultBuildIdentifier(build.getName(), build.getProjectDir());
         return new DefaultProjectComponentIdentifier(buildIdentifier, projectPath);
     }
 

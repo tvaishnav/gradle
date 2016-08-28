@@ -41,7 +41,6 @@ import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.conflict
 import org.gradle.api.internal.artifacts.repositories.ResolutionAwareRepository;
 import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.internal.project.ProjectRegistry;
-import org.gradle.initialization.IncludedBuilds;
 import org.gradle.internal.resolve.resolver.ArtifactResolver;
 import org.gradle.internal.resolve.resolver.ComponentMetaDataResolver;
 import org.gradle.internal.resolve.resolver.DependencyToComponentIdResolver;
@@ -61,18 +60,16 @@ public class DefaultArtifactDependencyResolver implements ArtifactDependencyReso
     private final CacheLockingManager cacheLockingManager;
     private final VersionComparator versionComparator;
     private final ProjectRegistry<ProjectInternal> projectRegistry;
-    private final IncludedBuilds includedBuilds;
 
     public DefaultArtifactDependencyResolver(ServiceRegistry serviceRegistry, ResolveIvyFactory ivyFactory, DependencyDescriptorFactory dependencyDescriptorFactory,
                                              CacheLockingManager cacheLockingManager, VersionComparator versionComparator,
-                                             ProjectRegistry<ProjectInternal> projectRegistry, IncludedBuilds includedBuilds) {
+                                             ProjectRegistry<ProjectInternal> projectRegistry) {
         this.serviceRegistry = serviceRegistry;
         this.ivyFactory = ivyFactory;
         this.dependencyDescriptorFactory = dependencyDescriptorFactory;
         this.cacheLockingManager = cacheLockingManager;
         this.versionComparator = versionComparator;
         this.projectRegistry = projectRegistry;
-        this.includedBuilds = includedBuilds;
     }
 
     @Override
@@ -90,7 +87,7 @@ public class DefaultArtifactDependencyResolver implements ArtifactDependencyReso
 
     private DependencyGraphBuilder createDependencyGraphBuilder(ComponentResolvers componentSource, ResolutionStrategyInternal resolutionStrategy, GlobalDependencyResolutionRules globalRules) {
 
-        DependencyToComponentIdResolver componentIdResolver = new DependencySubstitutionResolver(componentSource.getComponentIdResolver(), resolutionStrategy.getDependencySubstitutionRule(), projectRegistry, includedBuilds);
+        DependencyToComponentIdResolver componentIdResolver = new DependencySubstitutionResolver(componentSource.getComponentIdResolver(), resolutionStrategy.getDependencySubstitutionRule(), projectRegistry);
         ComponentMetaDataResolver componentMetaDataResolver = new ClientModuleResolver(componentSource.getComponentResolver(), dependencyDescriptorFactory);
 
         ResolveContextToComponentResolver requestResolver = createResolveContextConverter();

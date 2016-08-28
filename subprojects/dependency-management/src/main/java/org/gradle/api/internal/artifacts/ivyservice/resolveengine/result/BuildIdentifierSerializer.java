@@ -23,6 +23,7 @@ import org.gradle.internal.serialize.Decoder;
 import org.gradle.internal.serialize.Encoder;
 import org.gradle.internal.serialize.Serializer;
 
+import java.io.File;
 import java.io.IOException;
 
 public class BuildIdentifierSerializer implements Serializer<BuildIdentifier> {
@@ -32,7 +33,7 @@ public class BuildIdentifierSerializer implements Serializer<BuildIdentifier> {
         if (buildName == null) {
             return new CurrentBuildIdentifier();
         }
-        return new DefaultBuildIdentifier(buildName);
+        return new DefaultBuildIdentifier(buildName, new File(decoder.readString()));
     }
 
     @Override
@@ -41,6 +42,7 @@ public class BuildIdentifierSerializer implements Serializer<BuildIdentifier> {
             encoder.writeNullableString(null);
         } else {
             encoder.writeNullableString(value.getName());
+            encoder.writeString(((DefaultBuildIdentifier) value).getRootDir().getAbsolutePath());
         }
     }
 }

@@ -19,16 +19,24 @@ package org.gradle.internal.component.local.model;
 import com.google.common.base.Objects;
 import org.gradle.api.artifacts.component.BuildIdentifier;
 
+import java.io.File;
+
 public class DefaultBuildIdentifier implements BuildIdentifier {
     private final String name;
+    private final File rootDir;
 
-    public DefaultBuildIdentifier(String name) {
+    public DefaultBuildIdentifier(String name, File rootDir) {
         this.name = name;
+        this.rootDir = rootDir;
     }
 
     @Override
     public String getName() {
         return name;
+    }
+
+    public File getRootDir() {
+        return rootDir;
     }
 
     @Override

@@ -72,7 +72,6 @@ import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.internal.project.ProjectRegistry;
 import org.gradle.api.internal.runtimeshaded.RuntimeShadedJarFactory;
 import org.gradle.cache.CacheRepository;
-import org.gradle.initialization.IncludedBuilds;
 import org.gradle.initialization.ProjectAccessListener;
 import org.gradle.internal.component.external.model.ModuleComponentArtifactMetadata;
 import org.gradle.internal.installation.CurrentGradleInstallation;
@@ -237,7 +236,6 @@ class DependencyManagementBuildScopeServices {
                                                                 CacheLockingManager cacheLockingManager,
                                                                 VersionComparator versionComparator,
                                                                 ProjectRegistry<ProjectInternal> projectRegistry,
-                                                                IncludedBuilds includedBuilds,
                                                                 ServiceRegistry serviceRegistry) {
         ArtifactDependencyResolver resolver = new DefaultArtifactDependencyResolver(
             serviceRegistry,
@@ -245,8 +243,7 @@ class DependencyManagementBuildScopeServices {
             dependencyDescriptorFactory,
             cacheLockingManager,
             versionComparator,
-            projectRegistry,
-            includedBuilds
+            projectRegistry
         );
         return new CacheLockingArtifactDependencyResolver(cacheLockingManager, resolver);
     }

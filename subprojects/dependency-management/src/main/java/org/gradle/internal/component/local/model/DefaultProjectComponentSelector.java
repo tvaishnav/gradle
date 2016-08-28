@@ -97,7 +97,7 @@ public class DefaultProjectComponentSelector implements ProjectComponentSelector
         if (build == null) {
             return newSelector(projectPath);
         }
-        return new DefaultProjectComponentSelector(new DefaultBuildIdentifier(build.getName()), projectPath);
+        return new DefaultProjectComponentSelector(new DefaultBuildIdentifier(build.getName(), build.getProjectDir()), projectPath);
     }
 
     public static ProjectComponentSelector newSelector(BuildIdentifier build, String projectPath) {

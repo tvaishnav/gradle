@@ -22,7 +22,7 @@ import org.gradle.api.artifacts.component.ProjectComponentSelector;
 import org.gradle.api.internal.artifacts.DependencySubstitutionInternal;
 import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.internal.project.ProjectRegistry;
-import org.gradle.initialization.IncludedBuilds;
+import org.gradle.internal.component.local.model.DefaultBuildIdentifier;
 import org.gradle.internal.component.local.model.DefaultProjectComponentSelector;
 import org.gradle.internal.component.model.DependencyMetadata;
 import org.gradle.internal.resolve.ModuleVersionResolveException;
@@ -35,13 +35,11 @@ public class DependencySubstitutionResolver implements DependencyToComponentIdRe
     private final DependencyToComponentIdResolver resolver;
     private final Action<DependencySubstitution> rule;
     private final ProjectRegistry<ProjectInternal> projectRegistry;
-    private final IncludedBuilds includedBuilds;
 
-    public DependencySubstitutionResolver(DependencyToComponentIdResolver resolver, Action<DependencySubstitution> rule, ProjectRegistry<ProjectInternal> projectRegistry, IncludedBuilds includedBuilds) {
+    public DependencySubstitutionResolver(DependencyToComponentIdResolver resolver, Action<DependencySubstitution> rule, ProjectRegistry<ProjectInternal> projectRegistry) {
         this.resolver = resolver;
         this.rule = rule;
         this.projectRegistry = projectRegistry;
-        this.includedBuilds = includedBuilds;
     }
 
     public void resolve(DependencyMetadata dependency, BuildableComponentIdResolveResult result) {
@@ -80,15 +78,14 @@ public class DependencySubstitutionResolver implements DependencyToComponentIdRe
         if (target.getBuild().isCurrentBuild()) {
             return target;
         }
-        // TODO:DAZ If BuildIdentifier retained the buildDir, we wouldn't need to look it up here.
-        File targetBuildDir = includedBuilds.getBuild(target.getBuild().getName()).getProjectDir();
-        if (targetBuildDir.equals(getCurrentBuildDir())) {
+        DefaultBuildIdentifier buildIdentifier = (DefaultBuildIdentifier) target.getBuild();
+        if (buildIdentifier.getRootDir().equals(getCurrentBuildRootDir())) {
             return DefaultProjectComponentSelector.newSelector(target.getProjectPath());
         }
         return target;
     }
 
-    private File getCurrentBuildDir() {
-        return projectRegistry.getProject(":").getProjectDir();
+    private File getCurrentBuildRootDir() {
+        return projectRegistry.getProject(":").getRootDir();
     }
 }
