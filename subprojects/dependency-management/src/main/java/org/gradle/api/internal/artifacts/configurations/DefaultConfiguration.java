@@ -77,8 +77,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.gradle.internal.component.local.model.DefaultProjectComponentIdentifier.fullPath;
-
 public class DefaultConfiguration extends AbstractFileCollection implements ConfigurationInternal, MutationValidator {
     private final ConfigurationResolver resolver;
     private final ListenerManager listenerManager;
@@ -418,8 +416,8 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
 
     private void markReferencedProjectConfigurationsObserved(final InternalState requestedState) {
         for (ResolvedProjectConfiguration projectResult : cachedResolverResults.getResolvedLocalComponents().getResolvedProjectConfigurations()) {
-            ProjectInternal project = projectFinder.findProject(fullPath(projectResult.getId()));
-            if (project != null) {
+            if (projectResult.getId().getBuild().isCurrentBuild()) {
+                ProjectInternal project = projectFinder.getProject(projectResult.getId().getProjectPath());
                 ConfigurationInternal targetConfig = (ConfigurationInternal) project.getConfigurations().getByName(projectResult.getTargetConfiguration());
                 targetConfig.markAsObserved(requestedState);
             }

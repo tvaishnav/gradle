@@ -40,8 +40,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.SortedSet;
 
-import static org.gradle.internal.component.local.model.DefaultProjectComponentIdentifier.fullPath;
-
 /**
  * Provides a dependency substitution rule for composite build,
  * that substitutes a project within the composite with any dependency with a matching ModuleIdentifier.
@@ -88,10 +86,10 @@ public class CompositeBuildDependencySubstitutions implements Action<DependencyS
         SortedSet<String> sortedProjects = Sets.newTreeSet(CollectionUtils.collect(providingProjects, new Transformer<String, ProjectComponentIdentifier>() {
             @Override
             public String transform(ProjectComponentIdentifier projectComponentIdentifier) {
-                return fullPath(projectComponentIdentifier);
+                return projectComponentIdentifier.getDisplayName();
             }
         }));
-        String failureMessage = String.format("Module version '%s' is not unique in composite: can be provided by projects %s.", selector.getDisplayName(), sortedProjects);
+        String failureMessage = String.format("Module version '%s' is not unique in composite: can be provided by %s.", selector.getDisplayName(), sortedProjects);
         throw new ModuleVersionResolveException(selector, failureMessage);
     }
 }

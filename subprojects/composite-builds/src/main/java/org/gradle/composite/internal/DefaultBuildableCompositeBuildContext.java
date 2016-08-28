@@ -19,6 +19,7 @@ package org.gradle.composite.internal;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.commons.lang.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.DependencySubstitution;
@@ -39,8 +40,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static org.gradle.internal.component.local.model.DefaultProjectComponentIdentifier.fullPath;
 
 public class DefaultBuildableCompositeBuildContext implements CompositeBuildContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultBuildableCompositeBuildContext.class);
@@ -85,10 +84,10 @@ public class DefaultBuildableCompositeBuildContext implements CompositeBuildCont
     @Override
     public void registerSubstitution(ModuleVersionIdentifier moduleId, ProjectComponentIdentifier project) {
         if (projects.contains(project)) {
-            String failureMessage = String.format("Project path '%s' is not unique in composite.", fullPath(project));
+            String failureMessage = StringUtils.capitalize(project.getDisplayName()) +" is not unique in composite.";
             throw new GradleException(failureMessage);
         }
-        LOGGER.info("Registering project '" + project + "' in composite build. Will substitute for module '" + moduleId.getModule() + "'.");
+        LOGGER.info("Registering " + project + " in composite build. Will substitute for module '" + moduleId.getModule() + "'.");
         projects.add(project);
         provided.add(Pair.of(moduleId, project));
     }
@@ -100,7 +99,7 @@ public class DefaultBuildableCompositeBuildContext implements CompositeBuildCont
 
     public void register(ProjectComponentIdentifier project, LocalComponentMetadata localComponentMetadata, File projectDirectory) {
         if (projectMetadata.containsKey(project)) {
-            String failureMessage = String.format("Project path '%s' is not unique in composite.", fullPath(project));
+            String failureMessage = StringUtils.capitalize(project.getDisplayName()) +" is not unique in composite.";
             throw new GradleException(failureMessage);
         }
         projectMetadata.put(project, new RegisteredProject(localComponentMetadata, projectDirectory));
