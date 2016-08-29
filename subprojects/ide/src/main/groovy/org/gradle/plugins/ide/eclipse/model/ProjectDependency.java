@@ -35,6 +35,20 @@ public class ProjectDependency extends AbstractClasspathEntry {
         assertPathIsValid();
     }
 
+    /**
+     * Create a dependency on another Eclipse project.
+     * @param path The path to the Eclipse project, which is the name of the eclipse project preceded by "/".
+     */
+    public ProjectDependency(String path) {
+        super(path);
+        assertPathIsValid();
+    }
+
+    /**
+     * Create a dependency on another Eclipse project.
+     * @deprecated Use {@link #ProjectDependency(String)} instead
+     */
+    @Deprecated
     public ProjectDependency(String path, String gradlePath) {
         super(path);
         assertPathIsValid();
@@ -51,6 +65,7 @@ public class ProjectDependency extends AbstractClasspathEntry {
         this.projectId = gradlePath == null ? null : newProjectId(gradlePath);
     }
 
+    @Deprecated
     public String getGradlePath() {
         return projectId == null ? null : projectId.getProjectPath();
     }
