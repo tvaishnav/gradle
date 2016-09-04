@@ -22,7 +22,13 @@ import org.gradle.internal.classloader.MutableURLClassLoader;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -57,6 +63,10 @@ public class ClientSidePayloadClassLoaderRegistry implements PayloadClassLoaderR
                     uuid = getUuid(candidates);
                 } finally {
                     lock.unlock();
+                }
+                System.out.println("Inferred classpath: ");
+                for (URL url : classPath) {
+                    System.out.println("   " + url);
                 }
                 return Collections.singletonMap(CLIENT_CLASS_LOADER_ID, new ClassLoaderDetails(uuid, new MutableURLClassLoader.Spec(new ArrayList<URL>(classPath))));
             }

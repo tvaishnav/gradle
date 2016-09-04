@@ -48,6 +48,10 @@ public class PayloadSerializer {
     }
 
     public SerializedPayload serialize(Object payload) {
+
+        System.out.println("==================");
+        System.out.println("SERIALIZE: " + payload);
+
         final SerializeMap map = classLoaderRegistry.newSerializeSession();
         try {
             ByteArrayOutputStream content = new ByteArrayOutputStream();
@@ -88,9 +92,20 @@ public class PayloadSerializer {
             if (classLoaders.containsKey(SYSTEM_CLASS_LOADER_ID)) {
                 throw new IllegalArgumentException("Unexpected ClassLoader id found");
             }
+
+            dumpClassLoaders(classLoaders);
+            System.out.println("==================");
+
             return new SerializedPayload(classLoaders, content.toByteArray());
         } catch (IOException e) {
             throw UncheckedException.throwAsUncheckedException(e);
+        }
+    }
+
+    private void dumpClassLoaders(Map<Short, ClassLoaderDetails> classLoaders) {
+        System.out.println("Using ClassLoaders: ");
+        for (ClassLoaderDetails details : classLoaders.values()) {
+            System.out.println("   "  + details);
         }
     }
 
@@ -99,6 +114,11 @@ public class PayloadSerializer {
         try {
             final ClassLoader systemClassLoader = SYSTEM_CLASS_LOADER;
             final Map<Short, ClassLoaderDetails> classLoaderDetails = (Map<Short, ClassLoaderDetails>) payload.getHeader();
+
+            System.out.println("==================");
+            System.out.println("DESERIALIZE");
+            dumpClassLoaders(classLoaderDetails);
+            System.out.println("==================");
 
             final ObjectInputStream objectStream = new ObjectInputStream(new ByteArrayInputStream(payload.getSerializedModel())) {
                 @Override
@@ -123,7 +143,11 @@ public class PayloadSerializer {
                         return Class.forName(className, false, systemClassLoader);
                     }
                     ClassLoaderDetails classLoader = classLoaderDetails.get(id);
-                    return map.resolveClass(classLoader, className);
+                    try {
+                        return map.resolveClass(classLoader, className);
+                    } catch (ClassNotFoundException e) {
+                        throw new ClassNotFoundException("Could not load class '" + className + "' from ClassLoader " + classLoader, e);
+                    }
                 }
 
                 @Override
