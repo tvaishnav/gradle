@@ -19,6 +19,7 @@ package org.gradle.execution.taskgraph
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.OutputDirectory
@@ -217,9 +218,11 @@ class DefaultTaskExecutionPlanParallelTaskHandlingTest extends AbstractProjectBu
     }
 
     Task taskWithOutputFile(Project project = root, String taskName, File file) {
-        project.task(taskName, type: ParallelWithOutputFile) {
+        TaskInternal task = (TaskInternal) project.task(taskName, type: ParallelWithOutputFile) {
             outputFile = file
         }
+        task.processAnnotatedTaskInputsAndOutputs()
+        return task
     }
 
     def "two parallelizable tasks that have the same file in outputs are not executed in parallel"() {
@@ -242,9 +245,11 @@ class DefaultTaskExecutionPlanParallelTaskHandlingTest extends AbstractProjectBu
     }
 
     Task taskWithOutputDirectory(Project project = root, String taskName, File directory) {
-        project.task(taskName, type: ParallelWithOutputDirectory) {
+        TaskInternal task = (TaskInternal) project.task(taskName, type: ParallelWithOutputDirectory) {
             outputDirectory = directory
         }
+        task.processAnnotatedTaskInputsAndOutputs()
+        return task
     }
 
     def "a task that writes into a directory that is an output of currently running task is not started"() {

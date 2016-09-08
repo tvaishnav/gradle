@@ -13,32 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.gradle.api.internal.project.taskfactory;
 
 import org.gradle.api.tasks.OutputDirectories;
 
 import java.io.File;
-import java.lang.annotation.Annotation;
 import java.util.Collection;
 
-import static org.gradle.api.internal.tasks.TaskOutputsUtil.validateDirectory;
 import static org.gradle.api.internal.tasks.TaskOutputsUtil.ensureDirectoryExists;
+import static org.gradle.api.internal.tasks.TaskOutputsUtil.validateDirectory;
 
-@SuppressWarnings("deprecation")
-public class OutputDirectoriesPropertyAnnotationHandler extends AbstractPluralOutputPropertyAnnotationHandler {
-
+class OutputDirectoriesTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<OutputDirectories> {
     @Override
-    public Class<? extends Annotation> getAnnotationType() {
+    public Class<OutputDirectories> getAnnotationType() {
         return OutputDirectories.class;
     }
 
     @Override
-    protected void doValidate(String propertyName, File directory, Collection<String> messages) {
-        validateDirectory(propertyName, directory, messages);
+    public TaskPropertyInfo createProperty(TaskPropertyInfoContext context) {
+        return new OutputDirectoriesPropertyInfo(context);
     }
 
-    @Override
-    protected void doEnsureExists(File directory) {
-        ensureDirectoryExists(directory);
+    private static class OutputDirectoriesPropertyInfo extends AbstractPluralOutputPropertyInfo {
+        public OutputDirectoriesPropertyInfo(TaskPropertyInfoContext context) {
+            super(context);
+        }
+
+        @Override
+        protected void doValidate(String propertyName, File directory, Collection<String> messages) {
+            validateDirectory(propertyName, directory, messages);
+        }
+
+        @Override
+        protected void doEnsureExists(File directory) {
+            ensureDirectoryExists(directory);
+        }
     }
 }

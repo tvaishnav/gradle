@@ -18,23 +18,12 @@ package org.gradle.api.internal.project.taskfactory;
 
 import java.lang.annotation.Annotation;
 
-public class NoOpPropertyAnnotationHandler implements PropertyAnnotationHandler {
-    private final Class<? extends Annotation> annotationType;
-
-    public NoOpPropertyAnnotationHandler(Class<? extends Annotation> annotationType) {
-        this.annotationType = annotationType;
-    }
-
-    public Class<? extends Annotation> getAnnotationType() {
-        return annotationType;
-    }
-
-    public boolean attachActions(final TaskPropertyActionContext context) {
-        return false;
-    }
-
+abstract class SingleTaskPropertyInfoCreator<A extends Annotation> extends TaskPropertyInfoCreator<A> {
     @Override
-    public boolean getMustNotBeNullByDefault() {
-        return false;
+    public void createProperties(TaskPropertyInfoContext context, TaskPropertyInfoCollector properties) {
+        TaskPropertyInfo propertyInfo = createProperty(context);
+        properties.recordAnnotatedProperty(context.getName(), propertyInfo);
     }
+
+    protected abstract TaskPropertyInfo createProperty(TaskPropertyInfoContext context);
 }

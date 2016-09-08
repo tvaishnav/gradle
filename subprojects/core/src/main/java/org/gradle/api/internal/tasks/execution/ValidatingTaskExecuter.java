@@ -37,9 +37,7 @@ public class ValidatingTaskExecuter implements TaskExecuter {
 
     public void execute(TaskInternal task, TaskStateInternal state, TaskExecutionContext context) {
         List<String> messages = new ArrayList<String>();
-        for (TaskValidator validator : task.getValidators()) {
-            validator.validate(task, messages);
-        }
+        task.validateAnnotatedTaskInputsAndOutputs(messages);
         if (!messages.isEmpty()) {
             List<InvalidUserDataException> causes = new ArrayList<InvalidUserDataException>();
             messages = messages.subList(0, Math.min(5, messages.size()));

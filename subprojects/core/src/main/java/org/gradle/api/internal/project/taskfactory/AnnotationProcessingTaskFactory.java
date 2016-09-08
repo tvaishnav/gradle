@@ -67,16 +67,12 @@ public class AnnotationProcessingTaskFactory implements ITaskFactory {
             task.prependParallelSafeAction(actionFactory.create());
         }
 
-        TaskClassValidator validator = taskClassInfo.getValidator();
-        if (validator.hasAnythingToValidate()) {
-            task.prependParallelSafeAction(validator);
-            validator.addInputsAndOutputs(task);
-        }
-
         // Enabled caching if task type is annotated with @CacheableTask
         if (taskClassInfo.isCacheable()) {
             task.getOutputs().cacheIf(Specs.SATISFIES_ALL);
         }
+
+        task.setTaskClassInfo(taskClassInfo);
 
         return task;
     }

@@ -172,6 +172,7 @@ public class DefaultTaskInputs implements TaskInputsInternal {
     }
 
     public Map<String, Object> getProperties() {
+        task.processAnnotatedTaskInputsAndOutputs();
         Map<String, Object> actualProperties = new HashMap<String, Object>();
         for (Map.Entry<String, Object> entry : properties.entrySet()) {
             Object value = prepareValue(entry.getValue());
@@ -399,6 +400,7 @@ public class DefaultTaskInputs implements TaskInputsInternal {
 
         @Override
         public void visitContents(FileCollectionResolveContext context) {
+            task.processAnnotatedTaskInputsAndOutputs();
             for (PropertySpec fileProperty : filePropertiesInternal) {
                 if (!skipWhenEmptyOnly || fileProperty.isSkipWhenEmpty()) {
                     context.add(fileProperty.getPropertyFiles());

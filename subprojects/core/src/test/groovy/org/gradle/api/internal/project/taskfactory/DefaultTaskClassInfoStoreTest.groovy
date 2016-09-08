@@ -57,7 +57,7 @@ class DefaultTaskClassInfoStoreTest extends Specification {
         expect:
         !info.incremental
         !info.cacheable
-        info.validator.validatedProperties*.name.sort() == ["inputDirectory", "inputFile", "inputFiles", "inputString", "outputDirectories", "outputDirectory", "outputFile", "outputFiles"]
+        info.properties.keySet().sort() == ["inputDirectory", "inputFile", "inputFiles", "inputString", "outputDirectories", "outputDirectory", "outputFile", "outputFiles"]
         info.nonAnnotatedPropertyNames.empty
     }
 
@@ -105,7 +105,7 @@ class DefaultTaskClassInfoStoreTest extends Specification {
 
         expect:
         !info.incremental
-        info.validator.validatedProperties*.name.sort() == ["baseValue", "nonAnnotatedBaseValue", "superclassValue", "superclassValueWithDuplicateAnnotation"]
+        info.properties.keySet().sort() == ["baseValue", "nonAnnotatedBaseValue", "superclassValue", "superclassValueWithDuplicateAnnotation"]
         info.nonAnnotatedPropertyNames.empty
     }
 
@@ -126,7 +126,7 @@ class DefaultTaskClassInfoStoreTest extends Specification {
 
         expect:
         !info.incremental
-        info.validator.validatedProperties*.name.sort() == ["interfaceValue"]
+        info.properties.keySet().sort() == ["interfaceValue"]
         info.nonAnnotatedPropertyNames.empty
     }
 
@@ -144,8 +144,8 @@ class DefaultTaskClassInfoStoreTest extends Specification {
 
         expect:
         !info.incremental
-        info.validator.validatedProperties*.name.empty
-        info.validator.nonAnnotatedPropertyNames.sort() == ["inputFile", "value"]
+        info.properties.keySet().empty
+        info.nonAnnotatedPropertyNames.sort() == ["inputFile", "value"]
     }
 
     def "class infos are cached"() {
@@ -178,6 +178,6 @@ class DefaultTaskClassInfoStoreTest extends Specification {
     def "annotation on private filed is recognized for is-getter"() {
         def info = taskClassInfoStore.getTaskClassInfo(IsGetterTask)
         expect:
-        info.validator.validatedProperties*.name as List == ["feature1"]
+        info.properties.keySet().sort() == ["feature1"]
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.gradle.api.internal.project.taskfactory;
 
 import org.gradle.api.internal.TaskInternal;
 import org.gradle.api.tasks.InputFile;
 
 import java.io.File;
-import java.lang.annotation.Annotation;
 import java.util.Collection;
-import java.util.concurrent.Callable;
 
-import static org.gradle.api.internal.project.taskfactory.PropertyAnnotationUtils.getPathSensitivity;
+class InputFileTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<InputFile> {
+    @Override
+    public Class<InputFile> getAnnotationType() {
+        return InputFile.class;
+    }
 
-public class InputFilePropertyAnnotationHandler implements PropertyAnnotationHandler {
-    private final ValidationAction inputFileValidation = new ValidationAction() {
-        public void validate(String propertyName, Object value, Collection<String> messages) {
+    @Override
+    public TaskPropertyInfo createProperty(TaskPropertyInfoContext context) {
+        return new InputFilePropertyInfo(context);
+    }
+
+    private static class InputFilePropertyInfo extends AbstractTaskPropertyInfo {
+        public InputFilePropertyInfo(TaskPropertyInfoContext context) {
+            super(context);
+        }
+
+        @Override
+        protected void validateNonNullValue(TaskInternal task, String propertyName, Object value, Collection<String> messages) {
             File fileValue = (File) value;
             if (!fileValue.exists()) {
                 messages.add(String.format("File '%s' specified for property '%s' does not exist.", fileValue, propertyName));
@@ -35,26 +47,15 @@ public class InputFilePropertyAnnotationHandler implements PropertyAnnotationHan
                 messages.add(String.format("File '%s' specified for property '%s' is not a file.", fileValue, propertyName));
             }
         }
-    };
 
-    public Class<? extends Annotation> getAnnotationType() {
-        return InputFile.class;
-    }
-
-    public boolean attachActions(final TaskPropertyActionContext context) {
-        context.setValidationAction(inputFileValidation);
-        context.setConfigureAction(new UpdateAction() {
-            public void update(TaskInternal task, Callable<Object> futureValue) {
-                task.getInputs().files(futureValue)
-                    .withPropertyName(context.getName())
-                    .withPathSensitivity(getPathSensitivity(context));
+        @Override
+        protected void processValue(TaskInternal task, String propertyName, Object value) {
+            if (value == null) {
+                return;
             }
-        });
-        return true;
-    }
-
-    @Override
-    public boolean getMustNotBeNullByDefault() {
-        return true;
+            task.getInputs().file(value)
+                .withPropertyName(propertyName)
+                .withPathSensitivity(pathSensitivity);
+        }
     }
 }

@@ -55,5 +55,5 @@ public interface TaskContainerInternal extends TaskContainer, TaskResolver, Poly
     /**
      * Ensures that all configuration has been applied to the given task, and the task is ready to be added to the task graph.
      */
-    void prepareForExecution(Task task);
+    void prepareForExecution(TaskInternal task);
 }

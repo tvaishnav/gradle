@@ -31,6 +31,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.internal.file.TemporaryFileProvider;
 import org.gradle.api.internal.project.ProjectInternal;
+import org.gradle.api.internal.project.taskfactory.TaskClassInfo;
 import org.gradle.api.internal.tasks.ClassLoaderAwareTaskAction;
 import org.gradle.api.internal.tasks.ContextAwareTaskAction;
 import org.gradle.api.internal.tasks.DefaultTaskDependency;
@@ -43,7 +44,6 @@ import org.gradle.api.internal.tasks.TaskExecutionContext;
 import org.gradle.api.internal.tasks.TaskMutator;
 import org.gradle.api.internal.tasks.TaskStateInternal;
 import org.gradle.api.internal.tasks.execution.DefaultTaskExecutionContext;
-import org.gradle.api.internal.tasks.execution.TaskValidator;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.Convention;
@@ -109,8 +109,6 @@ public abstract class AbstractTask implements TaskInternal, DynamicObjectAware {
 
     private final TaskStateInternal state;
 
-    private List<TaskValidator> validators = new ArrayList<TaskValidator>();
-
     private final TaskMutator taskMutator;
     private ObservableList observableActionList;
     private boolean impliesSubProjects;
@@ -123,6 +121,8 @@ public abstract class AbstractTask implements TaskInternal, DynamicObjectAware {
     private final TaskOutputsInternal taskOutputs;
     private final Class<? extends Task> publicType;
     private LoggingManagerInternal loggingManager;
+    private TaskClassInfo taskClassInfo;
+    private boolean annotatedInputsAndOutputsProcessed;
 
     protected AbstractTask() {
         this(taskInfo());
@@ -329,6 +329,7 @@ public abstract class AbstractTask implements TaskInternal, DynamicObjectAware {
     }
 
     public final void execute() {
+        processAnnotatedTaskInputsAndOutputs();
         getExecuter().execute(this, state, new DefaultTaskExecutionContext());
         state.rethrowFailure();
     }
@@ -530,14 +531,6 @@ public abstract class AbstractTask implements TaskInternal, DynamicObjectAware {
                 return getTemporaryDir();
             }
         };
-    }
-
-    public void addValidator(TaskValidator validator) {
-        validators.add(validator);
-    }
-
-    public List<TaskValidator> getValidators() {
-        return validators;
     }
 
     private ContextAwareTaskAction convertClosureToAction(Closure actionClosure) {
@@ -792,5 +785,28 @@ public abstract class AbstractTask implements TaskInternal, DynamicObjectAware {
 
     public boolean isHasCustomActions() {
         return hasCustomActions;
+    }
+
+    @Override
+    public TaskClassInfo getTaskClassInfo() {
+        return taskClassInfo;
+    }
+
+    @Override
+    public void setTaskClassInfo(TaskClassInfo taskClassInfo) {
+        this.taskClassInfo = taskClassInfo;
+    }
+
+    @Override
+    public void processAnnotatedTaskInputsAndOutputs() {
+        if (!annotatedInputsAndOutputsProcessed) {
+            annotatedInputsAndOutputsProcessed = true;
+            taskClassInfo.processInputsAndOutputs(this);
+        }
+    }
+
+    @Override
+    public void validateAnnotatedTaskInputsAndOutputs(Collection<String> messages) {
+        taskClassInfo.validateInputsAndOutputs(this, messages);
     }
 }

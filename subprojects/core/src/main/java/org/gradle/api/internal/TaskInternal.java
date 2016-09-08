@@ -16,18 +16,20 @@
 
 package org.gradle.api.internal;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
+import org.gradle.api.internal.project.taskfactory.TaskClassInfo;
 import org.gradle.api.internal.tasks.ContextAwareTaskAction;
 import org.gradle.api.internal.tasks.TaskExecuter;
 import org.gradle.api.internal.tasks.TaskStateInternal;
-import org.gradle.api.internal.tasks.execution.TaskValidator;
 import org.gradle.api.specs.Spec;
 import org.gradle.internal.Factory;
 import org.gradle.logging.StandardOutputCapture;
 import org.gradle.util.Configurable;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -55,10 +57,6 @@ public interface TaskInternal extends Task, Configurable<Task> {
     @Override
     TaskOutputsInternal getOutputs();
 
-    List<TaskValidator> getValidators();
-
-    void addValidator(TaskValidator validator);
-
     TaskStateInternal getState();
 
     boolean getImpliesSubProjects();
@@ -77,4 +75,13 @@ public interface TaskInternal extends Task, Configurable<Task> {
     void appendParallelSafeAction(Action<? super Task> action);
 
     boolean isHasCustomActions();
+
+    void processAnnotatedTaskInputsAndOutputs();
+
+    void validateAnnotatedTaskInputsAndOutputs(Collection<String> messages);
+
+    @VisibleForTesting
+    TaskClassInfo getTaskClassInfo();
+
+    void setTaskClassInfo(TaskClassInfo taskClassInfo);
 }

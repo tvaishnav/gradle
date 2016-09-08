@@ -34,9 +34,8 @@ import org.gradle.internal.reflect.JavaReflectionUtil;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+
+import static org.gradle.api.internal.project.taskfactory.TaskPropertyParserUtils.findProperties;
 
 public class DefaultTaskClassInfoStore implements TaskClassInfoStore {
     private final LoadingCache<Class<? extends Task>, TaskClassInfo> classInfos = CacheBuilder.newBuilder()
@@ -44,15 +43,11 @@ public class DefaultTaskClassInfoStore implements TaskClassInfoStore {
         .build(new CacheLoader<Class<? extends Task>, TaskClassInfo>() {
             @Override
             public TaskClassInfo load(Class<? extends Task> type) throws Exception {
-                TaskClassInfo taskClassInfo = new TaskClassInfo();
-                findTaskActions(type, taskClassInfo);
-
-                TaskClassValidator validator = new TaskClassValidator();
-                validator.attachActions(null, type);
-                taskClassInfo.setValidator(validator);
-
-                taskClassInfo.setCacheable(type.isAnnotationPresent(CacheableTask.class));
-                return taskClassInfo;
+                TaskClassInfoContext context = new TaskClassInfoContext();
+                findTaskActions(type, context);
+                findProperties(type, context);
+                context.setCacheable(type.isAnnotationPresent(CacheableTask.class));
+                return context.build();
             }
         });
 
@@ -61,16 +56,15 @@ public class DefaultTaskClassInfoStore implements TaskClassInfoStore {
         return classInfos.getUnchecked(type);
     }
 
-    private void findTaskActions(Class<? extends Task> type, TaskClassInfo taskClassInfo) {
-        Set<String> methods = new HashSet<String>();
-        for (Class current = type; current != null; current = current.getSuperclass()) {
+    private static void findTaskActions(Class<? extends Task> type, TaskClassInfoContext context) {
+        for (Class<?> current = type; current != null; current = current.getSuperclass()) {
             for (Method method : current.getDeclaredMethods()) {
-                attachTaskAction(method, taskClassInfo, methods);
+                attachTaskAction(method, context);
             }
         }
     }
 
-    private void attachTaskAction(final Method method, TaskClassInfo taskClassInfo, Collection<String> processedMethods) {
+    private static void attachTaskAction(Method method, TaskClassInfoContext context) {
         if (method.getAnnotation(TaskAction.class) == null) {
             return;
         }
@@ -78,7 +72,7 @@ public class DefaultTaskClassInfoStore implements TaskClassInfoStore {
             throw new GradleException(String.format("Cannot use @TaskAction annotation on static method %s.%s().",
                 method.getDeclaringClass().getSimpleName(), method.getName()));
         }
-        final Class<?>[] parameterTypes = method.getParameterTypes();
+        Class<?>[] parameterTypes = method.getParameterTypes();
         if (parameterTypes.length > 1) {
             throw new GradleException(String.format(
                 "Cannot use @TaskAction annotation on method %s.%s() as this method takes multiple parameters.",
@@ -91,19 +85,14 @@ public class DefaultTaskClassInfoStore implements TaskClassInfoStore {
                     "Cannot use @TaskAction annotation on method %s.%s() because %s is not a valid parameter to an action method.",
                     method.getDeclaringClass().getSimpleName(), method.getName(), parameterTypes[0]));
             }
-            if (taskClassInfo.isIncremental()) {
-                throw new GradleException(String.format("Cannot have multiple @TaskAction methods accepting an %s parameter.", IncrementalTaskInputs.class.getSimpleName()));
-            }
-            taskClassInfo.setIncremental(true);
+            context.markAsIncremental();
         }
-        if (processedMethods.contains(method.getName())) {
-            return;
+        if (!context.hasAlreadyProcessed(method)) {
+            context.addActionFactory(createActionFactory(method, parameterTypes));
         }
-        taskClassInfo.getTaskActions().add(createActionFactory(method, parameterTypes));
-        processedMethods.add(method.getName());
     }
 
-    private Factory<Action<Task>> createActionFactory(final Method method, final Class<?>[] parameterTypes) {
+    private static Factory<Action<Task>> createActionFactory(final Method method, final Class<?>[] parameterTypes) {
         return new Factory<Action<Task>>() {
             public Action<Task> create() {
                 if (parameterTypes.length == 1) {

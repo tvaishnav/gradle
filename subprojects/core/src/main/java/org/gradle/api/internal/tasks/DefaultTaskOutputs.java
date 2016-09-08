@@ -38,6 +38,7 @@ import org.gradle.api.internal.tasks.CacheableTaskOutputFilePropertySpec.OutputT
 import org.gradle.api.specs.AndSpec;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.TaskDependency;
 import org.gradle.api.tasks.TaskOutputFilePropertyBuilder;
 import org.gradle.api.tasks.TaskOutputs;
 import org.gradle.util.DeprecationLogger;
@@ -68,28 +69,7 @@ public class DefaultTaskOutputs implements TaskOutputsInternal {
         this.resolver = resolver;
         this.task = task;
         this.taskMutator = taskMutator;
-
-        final DefaultTaskDependency buildDependencies = new DefaultTaskDependency();
-        buildDependencies.add(task);
-        this.allOutputFiles = new CompositeFileCollection() {
-            @Override
-            public String getDisplayName() {
-                return task + " output files";
-            }
-
-            @Override
-            public void visitContents(FileCollectionResolveContext context) {
-                for (TaskFilePropertySpec propertySpec : getFileProperties()) {
-                    context.add(propertySpec.getPropertyFiles());
-                }
-            }
-
-            @Override
-            public void visitDependencies(TaskDependencyResolveContext context) {
-                context.add(buildDependencies);
-                super.visitDependencies(context);
-            }
-        };
+        this.allOutputFiles = new TaskOutputUnionFileCollection();
     }
 
     @Override
@@ -464,6 +444,33 @@ public class DefaultTaskOutputs implements TaskOutputsInternal {
         @Override
         public int compareTo(TaskPropertySpec o) {
             return getPropertyName().compareTo(o.getPropertyName());
+        }
+    }
+
+    private class TaskOutputUnionFileCollection extends CompositeFileCollection {
+        private final TaskDependency buildDependencies;
+
+        public TaskOutputUnionFileCollection() {
+            this.buildDependencies = new DefaultTaskDependency().add(task);
+        }
+
+        @Override
+        public String getDisplayName() {
+            return task + " output files";
+        }
+
+        @Override
+        public void visitContents(FileCollectionResolveContext context) {
+            task.processAnnotatedTaskInputsAndOutputs();
+            for (TaskFilePropertySpec propertySpec : getFileProperties()) {
+                context.add(propertySpec.getPropertyFiles());
+            }
+        }
+
+        @Override
+        public void visitDependencies(TaskDependencyResolveContext context) {
+            context.add(buildDependencies);
+            super.visitDependencies(context);
         }
     }
 }

@@ -20,22 +20,23 @@ import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.gradle.api.internal.TaskInternal;
 import org.gradle.api.tasks.TaskOutputFilePropertyBuilder;
-import org.gradle.internal.Cast;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
-import static org.gradle.api.internal.project.taskfactory.PropertyAnnotationUtils.getPathSensitivity;
 import static org.gradle.internal.Cast.uncheckedCast;
-import static org.gradle.util.GUtil.uncheckedCall;
 
-public abstract class AbstractPluralOutputPropertyAnnotationHandler extends AbstractOutputPropertyAnnotationHandler {
+abstract class AbstractPluralOutputPropertyInfo extends AbstractTaskPropertyInfo {
+    private final Class<?> type;
+
+    public AbstractPluralOutputPropertyInfo(TaskPropertyInfoContext context) {
+        super(context);
+        this.type = context.getType();
+    }
 
     @Override
-    protected void validate(String propertyName, Object value, Collection<String> messages) {
+    protected final void validateNonNullValue(TaskInternal task, String propertyName, Object value, Collection<String> messages) {
         for (File file : toFiles(value)) {
             doValidate(propertyName, file, messages);
         }
@@ -44,30 +45,32 @@ public abstract class AbstractPluralOutputPropertyAnnotationHandler extends Abst
     protected abstract void doValidate(String propertyName, File file, Collection<String> messages);
 
     @Override
-    protected void update(final TaskPropertyActionContext context, final TaskInternal task, final Callable<Object> futureValue) {
-        TaskOutputFilePropertyBuilder propertyBuilder;
-        if (Map.class.isAssignableFrom(context.getType())) {
-            propertyBuilder = task.getOutputs().namedFiles(Cast.<Callable<Map<?, ?>>>uncheckedCast(futureValue));
-        } else {
-            propertyBuilder = task.getOutputs().files(futureValue);
+    protected final void processValue(TaskInternal task, String propertyName, final Object value) {
+        if (value == null) {
+            return;
         }
-        propertyBuilder.withPropertyName(context.getName());
-        propertyBuilder.withPathSensitivity(getPathSensitivity(context));
+        TaskOutputFilePropertyBuilder propertyBuilder;
         task.prependParallelSafeAction(new Action<Task>() {
+            @Override
             public void execute(Task task) {
-                for (File file : toFiles(uncheckedCall(futureValue))) {
+                for (File file : toFiles(value)) {
                     doEnsureExists(file);
                 }
             }
         });
+        if (Map.class.isAssignableFrom(type)) {
+            propertyBuilder = task.getOutputs().namedFiles(Map.class.cast(value));
+        } else {
+            propertyBuilder = task.getOutputs().files(value);
+        }
+        propertyBuilder.withPropertyName(propertyName);
+        propertyBuilder.withPathSensitivity(pathSensitivity);
     }
 
     protected abstract void doEnsureExists(File file);
 
     private static Iterable<File> toFiles(Object value) {
-        if (value == null) {
-            return Collections.emptySet();
-        } else if (value instanceof Map) {
+        if (value instanceof Map) {
             return uncheckedCast(((Map) value).values());
         } else {
             return uncheckedCast(value);

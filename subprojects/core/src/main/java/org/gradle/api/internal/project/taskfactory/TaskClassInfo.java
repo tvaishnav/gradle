@@ -16,49 +16,68 @@
 
 package org.gradle.api.internal.project.taskfactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
+import org.gradle.api.internal.TaskInternal;
 import org.gradle.internal.Factory;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class TaskClassInfo {
-    private TaskClassValidator validator;
-    private final List<Factory<Action<Task>>> taskActions = new ArrayList<Factory<Action<Task>>>();
-    private boolean incremental;
-    private boolean cacheable;
+    private final boolean incremental;
+    private final boolean cacheable;
+    private final Set<String> nonAnnotatedPropertyNames;
+    private final List<Factory<Action<Task>>> taskActions;
+    private final TaskPropertyInfoContainer properties;
 
-    public TaskClassValidator getValidator() {
-        return validator;
-    }
-
-    public void setValidator(TaskClassValidator validator) {
-        this.validator = validator;
-    }
-
-    public List<Factory<Action<Task>>> getTaskActions() {
-        return taskActions;
+    public TaskClassInfo(boolean incremental, boolean cacheable, Set<String> nonAnnotatedPropertyNames, Map<String, TaskPropertyInfo> properties, List<Factory<Action<Task>>> taskActions) {
+        this.incremental = incremental;
+        this.cacheable = cacheable;
+        this.nonAnnotatedPropertyNames = nonAnnotatedPropertyNames;
+        this.properties = new TaskPropertyInfoContainer(properties);
+        this.taskActions = taskActions;
     }
 
     public boolean isIncremental() {
         return incremental;
     }
 
-    public void setIncremental(boolean incremental) {
-        this.incremental = incremental;
+    public Set<String> getNonAnnotatedPropertyNames() {
+        return nonAnnotatedPropertyNames;
     }
 
-    public Set<String> getNonAnnotatedPropertyNames() {
-        return validator.getNonAnnotatedPropertyNames();
+    @VisibleForTesting
+    Map<String, TaskPropertyInfo> getProperties() {
+        return properties.getProperties();
     }
 
     public boolean isCacheable() {
         return cacheable;
     }
 
-    public void setCacheable(boolean cacheable) {
-        this.cacheable = cacheable;
+    public List<Factory<Action<Task>>> getTaskActions() {
+        return taskActions;
+    }
+
+    public void validateInputsAndOutputs(final TaskInternal task, final Collection<String> messages) {
+        properties.visitProperties(task, new TaskPropertyInfoContainer.TaskPropertyInfoVisitor() {
+            @Override
+            public void visit(String propertyName, TaskPropertyInfo property, Object value) {
+                property.validate(task, propertyName, value, messages);
+            }
+        });
+    }
+
+    public void processInputsAndOutputs(final TaskInternal task) {
+        properties.visitProperties(task, new TaskPropertyInfoContainer.TaskPropertyInfoVisitor() {
+            @Override
+            public void visit(String propertyName, TaskPropertyInfo property, Object value) {
+                property.process(task, propertyName, value);
+            }
+        });
     }
 }

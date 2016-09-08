@@ -28,7 +28,6 @@ class ValidatingTaskExecuterTest extends Specification {
     final TaskInternal task = Mock()
     final TaskStateInternal state = Mock()
     final TaskExecutionContext executionContext = Mock()
-    final TaskValidator validator = Mock()
     final ValidatingTaskExecuter executer = new ValidatingTaskExecuter(target)
 
     def executesTaskWhenThereAreNoViolations() {
@@ -36,8 +35,7 @@ class ValidatingTaskExecuterTest extends Specification {
         executer.execute(task, state, executionContext)
 
         then:
-        _ * task.validators >> [validator]
-        1 * validator.validate(task, !null)
+        1 * task.validateAnnotatedTaskInputsAndOutputs(_)
         1 * target.execute(task, state, executionContext)
         0 * _._
     }
@@ -47,8 +45,7 @@ class ValidatingTaskExecuterTest extends Specification {
         executer.execute(task, state, executionContext)
 
         then:
-        _ * task.validators >> [validator]
-        1 * validator.validate(task, !null) >> { it[1] << 'failure' }
+        1 * task.validateAnnotatedTaskInputsAndOutputs(_) >> { it[0] << "failure" }
         1 * state.executed(!null) >> {
             def failure = it[0]
             assert failure instanceof TaskValidationException
@@ -64,8 +61,7 @@ class ValidatingTaskExecuterTest extends Specification {
         executer.execute(task, state, executionContext)
 
         then:
-        _ * task.validators >> [validator]
-        1 * validator.validate(task, !null) >> { it[1] << 'failure1'; it[1] << 'failure2' }
+        1 * task.validateAnnotatedTaskInputsAndOutputs(_) >> { it[0] << 'failure1'; it[0] << 'failure2' }
         1 * state.executed(!null) >> {
             def failure = it[0]
             assert failure instanceof TaskValidationException

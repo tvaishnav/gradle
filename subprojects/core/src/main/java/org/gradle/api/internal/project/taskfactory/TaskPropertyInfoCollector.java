@@ -16,14 +16,7 @@
 
 package org.gradle.api.internal.project.taskfactory;
 
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
-
-public class PropertyAnnotationUtils {
-    public static PathSensitivity getPathSensitivity(TaskPropertyActionContext context) {
-        PathSensitive sensitivity = context.getAnnotation(PathSensitive.class);
-        return sensitivity != null
-            ? sensitivity.value()
-            : PathSensitivity.ABSOLUTE;
-    }
+interface TaskPropertyInfoCollector {
+    void recordAnnotatedProperty(String name, TaskPropertyInfo property);
+    void recordNonAnnotatedPropertyName(String propertyName);
 }
