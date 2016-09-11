@@ -24,7 +24,7 @@ import java.util.Collection;
 import static org.gradle.api.internal.tasks.TaskOutputsUtil.ensureDirectoryExists;
 import static org.gradle.api.internal.tasks.TaskOutputsUtil.validateDirectory;
 
-class OutputDirectoriesTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<OutputDirectories> {
+class OutputDirectoriesTaskPropertyInfoCreator extends TaskPropertyInfoCreator<OutputDirectories> {
     @Override
     public Class<OutputDirectories> getAnnotationType() {
         return OutputDirectories.class;

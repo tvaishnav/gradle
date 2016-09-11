@@ -16,9 +16,30 @@
 
 package org.gradle.api.internal.project.taskfactory;
 
+import org.gradle.internal.reflect.JavaMethod;
+
 import java.lang.reflect.Method;
 
-interface TaskPropertyInfoCollector {
-    void recordAnnotatedProperty(String name, Method accessor, TaskPropertyInfo property);
-    void recordNonAnnotatedPropertyName(String propertyName);
+class TaskPropertyAccessor {
+    private final String name;
+    private final JavaMethod<Object, Object> accessor;
+    private final TaskPropertyInfo propertyInfo;
+
+    public TaskPropertyAccessor(String name, Method accessor, TaskPropertyInfo propertyInfo) {
+        this.name = name;
+        this.accessor = new JavaMethod<Object, Object>(Object.class, accessor);
+        this.propertyInfo = propertyInfo;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Object getPropertyValue(Object value) {
+        return accessor.invoke(value);
+    }
+
+    public TaskPropertyInfo getPropertyInfo() {
+        return propertyInfo;
+    }
 }

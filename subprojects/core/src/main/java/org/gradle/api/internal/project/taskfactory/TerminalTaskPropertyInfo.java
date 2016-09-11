@@ -16,13 +16,17 @@
 
 package org.gradle.api.internal.project.taskfactory;
 
-import java.lang.annotation.Annotation;
+import org.gradle.api.tasks.PathSensitivity;
 
-abstract class TaskPropertyInfoCreator<A extends Annotation> implements TaskPropertyAnnotationHandler<A> {
-    public abstract TaskPropertyInfo createProperty(TaskPropertyInfoContext context);
+abstract class TerminalTaskPropertyInfo extends AbstractTaskPropertyInfo {
+    protected final boolean skipWhenEmpty;
+    protected final boolean orderSensitive;
+    protected final PathSensitivity pathSensitivity;
 
-    @Override
-    public void handleAnnotation(TaskPropertyInfoContext context, A annotation) {
-        context.setPropertyCreator(this);
+    public TerminalTaskPropertyInfo(TaskPropertyInfoContext context) {
+        super(context.isOptional());
+        this.skipWhenEmpty = context.isSkipWhenEmpty();
+        this.orderSensitive = context.isOrderSensitive();
+        this.pathSensitivity = context.getPathSensitivity();
     }
 }

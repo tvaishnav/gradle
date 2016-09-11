@@ -35,21 +35,25 @@ import org.gradle.internal.reflect.JavaReflectionUtil;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import static org.gradle.api.internal.project.taskfactory.TaskPropertyParserUtils.findProperties;
-
 public class DefaultTaskClassInfoStore implements TaskClassInfoStore {
     private final LoadingCache<Class<? extends Task>, TaskClassInfo> classInfos = CacheBuilder.newBuilder()
         .weakKeys()
         .build(new CacheLoader<Class<? extends Task>, TaskClassInfo>() {
             @Override
             public TaskClassInfo load(Class<? extends Task> type) throws Exception {
-                TaskClassInfoContext context = new TaskClassInfoContext();
+                TaskClassInfoContext context = new TaskClassInfoContext(classInfoStore);
                 findTaskActions(type, context);
-                findProperties(type, context);
+                context.setClassInfo(classInfoStore.getClassInfo(type));
                 context.setCacheable(type.isAnnotationPresent(CacheableTask.class));
                 return context.build();
             }
         });
+
+    private final ClassInfoStore classInfoStore;
+
+    public DefaultTaskClassInfoStore(ClassInfoStore classInfoStore) {
+        this.classInfoStore = classInfoStore;
+    }
 
     @Override
     public TaskClassInfo getTaskClassInfo(Class<? extends Task> type) {

@@ -24,7 +24,7 @@ import java.util.Collection;
 import static org.gradle.api.internal.tasks.TaskOutputsUtil.ensureParentDirectoryExists;
 import static org.gradle.api.internal.tasks.TaskOutputsUtil.validateFile;
 
-class OutputFilesTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<OutputFiles> {
+class OutputFilesTaskPropertyInfoCreator extends TaskPropertyInfoCreator<OutputFiles> {
     @Override
     public Class<OutputFiles> getAnnotationType() {
         return OutputFiles.class;

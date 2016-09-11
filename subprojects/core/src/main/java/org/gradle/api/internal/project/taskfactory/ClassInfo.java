@@ -16,13 +16,22 @@
 
 package org.gradle.api.internal.project.taskfactory;
 
-import java.lang.annotation.Annotation;
+import java.util.Set;
 
-abstract class TaskPropertyInfoCreator<A extends Annotation> implements TaskPropertyAnnotationHandler<A> {
-    public abstract TaskPropertyInfo createProperty(TaskPropertyInfoContext context);
+public class ClassInfo {
+    private final Set<String> nonAnnotatedProperties;
+    private final TaskPropertyInfoCollection properties;
 
-    @Override
-    public void handleAnnotation(TaskPropertyInfoContext context, A annotation) {
-        context.setPropertyCreator(this);
+    public ClassInfo(TaskPropertyInfoCollection properties, Set<String> nonAnnotatedProperties) {
+        this.nonAnnotatedProperties = nonAnnotatedProperties;
+        this.properties = properties;
+    }
+
+    public TaskPropertyInfoCollection getProperties() {
+        return properties;
+    }
+
+    public Set<String> getNonAnnotatedProperties() {
+        return nonAnnotatedProperties;
     }
 }

@@ -29,4 +29,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.FIELD})
 public @interface Nested {
+    /**
+     * Whether to resolve `Iterable` and `Map` type properties into sub-properties.
+     */
+    boolean resolveCollections() default false;
 }

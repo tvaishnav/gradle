@@ -17,8 +17,6 @@
 package org.gradle.api.internal.project.taskfactory;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.Task;
@@ -29,13 +27,17 @@ import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 
-class TaskClassInfoContext implements TaskPropertyInfoCollector {
+class TaskClassInfoContext {
     private final ImmutableList.Builder<Factory<Action<Task>>> actionFactoriesBuilder = ImmutableList.builder();
-    private final ImmutableMap.Builder<String, TaskPropertyInfo> annotatedPropertyInfosBuilder = ImmutableMap.builder();
-    private final ImmutableSet.Builder<String> nonAnnotatedPropertyNamesBuilder = ImmutableSet.builder();
     private final Set<String> processedMethods = new HashSet<String>();
+    private final ClassInfoStore classInfoStore;
+    private ClassInfo classInfo;
     private boolean incremental;
     private boolean cacheable;
+
+    public TaskClassInfoContext(ClassInfoStore classInfoStore) {
+        this.classInfoStore = classInfoStore;
+    }
 
     public boolean hasAlreadyProcessed(Method method) {
         return !processedMethods.add(method.getName());
@@ -57,16 +59,10 @@ class TaskClassInfoContext implements TaskPropertyInfoCollector {
     }
 
     public TaskClassInfo build() {
-        return new TaskClassInfo(incremental, cacheable, nonAnnotatedPropertyNamesBuilder.build(), annotatedPropertyInfosBuilder.build(), actionFactoriesBuilder.build());
+        return new TaskClassInfo(classInfoStore, incremental, cacheable, classInfo, actionFactoriesBuilder.build());
     }
 
-    @Override
-    public void recordAnnotatedProperty(String name, TaskPropertyInfo property) {
-        annotatedPropertyInfosBuilder.put(name, property);
-    }
-
-    @Override
-    public void recordNonAnnotatedPropertyName(String propertyName) {
-        nonAnnotatedPropertyNamesBuilder.add(propertyName);
+    public void setClassInfo(ClassInfo classInfo) {
+        this.classInfo = classInfo;
     }
 }

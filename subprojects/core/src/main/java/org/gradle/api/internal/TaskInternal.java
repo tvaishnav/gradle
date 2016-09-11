@@ -16,7 +16,6 @@
 
 package org.gradle.api.internal;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.gradle.api.internal.project.taskfactory.TaskClassInfo;
@@ -79,9 +78,6 @@ public interface TaskInternal extends Task, Configurable<Task> {
     void processAnnotatedTaskInputsAndOutputs();
 
     void validateAnnotatedTaskInputsAndOutputs(Collection<String> messages);
-
-    @VisibleForTesting
-    TaskClassInfo getTaskClassInfo();
 
     void setTaskClassInfo(TaskClassInfo taskClassInfo);
 }

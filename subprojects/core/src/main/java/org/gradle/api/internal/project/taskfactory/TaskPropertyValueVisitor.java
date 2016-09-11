@@ -16,14 +16,6 @@
 
 package org.gradle.api.internal.project.taskfactory;
 
-import java.lang.annotation.Annotation;
-
-abstract class SingleTaskPropertyInfoCreator<A extends Annotation> extends TaskPropertyInfoCreator<A> {
-    @Override
-    public void createProperties(TaskPropertyInfoContext context, TaskPropertyInfoCollector properties) {
-        TaskPropertyInfo propertyInfo = createProperty(context);
-        properties.recordAnnotatedProperty(context.getName(), propertyInfo);
-    }
-
-    protected abstract TaskPropertyInfo createProperty(TaskPropertyInfoContext context);
+public interface TaskPropertyValueVisitor {
+    void visitValue(String propertyName, Object value, TaskPropertyInfo property);
 }

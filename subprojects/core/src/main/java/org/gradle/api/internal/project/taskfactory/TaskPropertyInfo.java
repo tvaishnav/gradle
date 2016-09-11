@@ -18,9 +18,14 @@ package org.gradle.api.internal.project.taskfactory;
 
 import org.gradle.api.internal.TaskInternal;
 
+import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Set;
 
-interface TaskPropertyInfo {
+public interface TaskPropertyInfo {
     void validate(TaskInternal task, String propertyName, Object value, Collection<String> messages);
+    Collection<String> getNonAnnotatedSubProperties(String propertyName, ClassInfoStore classInfoStore);
     void process(TaskInternal task, String propertyName, Object value);
+    void acceptVisitor(ClassInfoStore classInfoStore, String propertyName, Set<Type> visitedTypes, TaskPropertyDeclarationVisitor visitor);
+    void acceptVisitor(ClassInfoStore classInfoStore, String propertyName, Object value, TaskPropertyValueVisitor visitor);
 }

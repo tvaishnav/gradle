@@ -47,7 +47,7 @@ class AnnotationProcessingTaskFactoryTest extends AbstractProjectBuilderSpec {
 
     def setup() {
         delegate = Mock(ITaskFactory)
-        factory = new AnnotationProcessingTaskFactory(new DefaultTaskClassInfoStore(), delegate)
+        factory = new AnnotationProcessingTaskFactory(new DefaultTaskClassInfoStore(new DefaultClassInfoStore()), delegate)
         testDir = temporaryFolder.testDirectory
         existingFile = testDir.file("file.txt").touch()
         missingFile = testDir.file("missing.txt")

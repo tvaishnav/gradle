@@ -17,32 +17,21 @@
 package org.gradle.api.internal.project.taskfactory;
 
 import org.gradle.api.internal.TaskInternal;
-import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.internal.Factory;
-import org.gradle.internal.reflect.JavaReflectionUtil;
-import org.gradle.util.DeprecationLogger;
 
-import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 
 abstract class AbstractTaskPropertyInfo implements TaskPropertyInfo {
-    private final Method method;
-    protected final boolean optional;
-    protected final boolean skipWhenEmpty;
-    protected final boolean orderSensitive;
-    protected final PathSensitivity pathSensitivity;
+    private final boolean optional;
 
-    public AbstractTaskPropertyInfo(TaskPropertyInfoContext context) {
-        this.method = context.getMethod();
-        this.optional = context.isOptional();
-        this.skipWhenEmpty = context.isSkipWhenEmpty();
-        this.orderSensitive = context.isOrderSensitive();
-        this.pathSensitivity = context.getPathSensitivity();
+    public AbstractTaskPropertyInfo(boolean optional) {
+        this.optional = optional;
     }
 
     @Override
-    public void validate(TaskInternal task, String propertyName, Object parentValue, Collection<String> messages) {
-        Object value = getPropertyValue(parentValue);
+    public void validate(TaskInternal task, String propertyName, Object value, Collection<String> messages) {
         if (value == null) {
             if (!optional) {
                 messages.add(String.format("No value has been specified for property '%s'.", propertyName));
@@ -52,21 +41,25 @@ abstract class AbstractTaskPropertyInfo implements TaskPropertyInfo {
         validateNonNullValue(task, propertyName, value, messages);
     }
 
+    protected void validateNonNullValue(TaskInternal task, String propertyName, Object value, Collection<String> messages) {
+    }
+
     @Override
-    public void process(TaskInternal task, String propertyName, final Object parentValue) {
-        processValue(task, propertyName, getPropertyValue(parentValue));
+    public void process(TaskInternal task, String propertyName, Object value) {
     }
 
-    private Object getPropertyValue(final Object parentValue) {
-        return DeprecationLogger.whileDisabled(new Factory<Object>() {
-            @Override
-            public Object create() {
-                return JavaReflectionUtil.method(Object.class, method).invoke(parentValue);
-            }
-        });
+    @Override
+    public void acceptVisitor(ClassInfoStore classInfoStore, String propertyName, Set<Type> visitedTypes, TaskPropertyDeclarationVisitor visitor) {
+        visitor.visitDeclaration(propertyName, this);
     }
 
-    protected abstract void validateNonNullValue(TaskInternal task, String propertyName, Object value, Collection<String> messages);
+    @Override
+    public void acceptVisitor(ClassInfoStore classInfoStore, String propertyName, Object value, TaskPropertyValueVisitor visitor) {
+        visitor.visitValue(propertyName, value, this);
+    }
 
-    abstract protected void processValue(TaskInternal task, String propertyName, Object value);
+    @Override
+    public Collection<String> getNonAnnotatedSubProperties(String propertyName, ClassInfoStore classInfoStore) {
+        return Collections.emptySet();
+    }
 }

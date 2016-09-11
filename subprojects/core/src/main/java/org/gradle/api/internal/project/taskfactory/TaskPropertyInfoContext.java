@@ -20,6 +20,7 @@ import org.gradle.api.tasks.PathSensitivity;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 
 class TaskPropertyInfoContext {
     private final String name;
@@ -30,6 +31,7 @@ class TaskPropertyInfoContext {
     private boolean orderSensitive;
     private PathSensitivity pathSensitivity = PathSensitivity.ABSOLUTE;
     private TaskPropertyInfoCreator<?> propertyCreator;
+    private boolean resolveCollections;
 
     public TaskPropertyInfoContext(String name, Method method) {
         this.name = name;
@@ -46,8 +48,10 @@ class TaskPropertyInfoContext {
         return name;
     }
 
-    public Class<?> getType() {
-        return field != null ? field.getType() : method.getReturnType();
+    public Type getType() {
+        return field != null
+            ? field.getGenericType()
+            : method.getGenericReturnType();
     }
 
     public Method getMethod() {
@@ -96,5 +100,13 @@ class TaskPropertyInfoContext {
                 name, method.getDeclaringClass().getName(), this.propertyCreator.getAnnotationType().getSimpleName(), propertyCreator.getAnnotationType().getSimpleName()));
         }
         this.propertyCreator = propertyCreator;
+    }
+
+    public boolean isResolveCollections() {
+        return resolveCollections;
+    }
+
+    public void setResolveCollections(boolean resolveCollections) {
+        this.resolveCollections = resolveCollections;
     }
 }

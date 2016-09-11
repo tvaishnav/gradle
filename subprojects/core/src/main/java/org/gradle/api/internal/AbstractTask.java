@@ -16,6 +16,7 @@
 
 package org.gradle.api.internal;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Sets;
@@ -32,6 +33,8 @@ import org.gradle.api.Task;
 import org.gradle.api.internal.file.TemporaryFileProvider;
 import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.internal.project.taskfactory.TaskClassInfo;
+import org.gradle.api.internal.project.taskfactory.TaskPropertyInfo;
+import org.gradle.api.internal.project.taskfactory.TaskPropertyValueVisitor;
 import org.gradle.api.internal.tasks.ClassLoaderAwareTaskAction;
 import org.gradle.api.internal.tasks.ContextAwareTaskAction;
 import org.gradle.api.internal.tasks.DefaultTaskDependency;
@@ -787,7 +790,7 @@ public abstract class AbstractTask implements TaskInternal, DynamicObjectAware {
         return hasCustomActions;
     }
 
-    @Override
+    @VisibleForTesting
     public TaskClassInfo getTaskClassInfo() {
         return taskClassInfo;
     }
@@ -801,12 +804,22 @@ public abstract class AbstractTask implements TaskInternal, DynamicObjectAware {
     public void processAnnotatedTaskInputsAndOutputs() {
         if (!annotatedInputsAndOutputsProcessed) {
             annotatedInputsAndOutputsProcessed = true;
-            taskClassInfo.processInputsAndOutputs(this);
+            taskClassInfo.visitValues(this, new TaskPropertyValueVisitor() {
+                @Override
+                public void visitValue(String propertyName, Object value, TaskPropertyInfo property) {
+                    property.process(AbstractTask.this, propertyName, value);
+                }
+            });
         }
     }
 
     @Override
-    public void validateAnnotatedTaskInputsAndOutputs(Collection<String> messages) {
-        taskClassInfo.validateInputsAndOutputs(this, messages);
+    public void validateAnnotatedTaskInputsAndOutputs(final Collection<String> messages) {
+        taskClassInfo.visitValues(this, new TaskPropertyValueVisitor() {
+            @Override
+            public void visitValue(String propertyName, Object value, TaskPropertyInfo property) {
+                property.validate(AbstractTask.this, propertyName, value, messages);
+            }
+        });
     }
 }

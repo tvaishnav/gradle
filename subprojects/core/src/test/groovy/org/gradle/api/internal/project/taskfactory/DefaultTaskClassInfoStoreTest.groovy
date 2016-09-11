@@ -16,7 +16,12 @@
 
 package org.gradle.api.internal.project.taskfactory
 
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
 import org.gradle.api.DefaultTask
+import org.gradle.api.Task
+import org.gradle.api.internal.AbstractTask
+import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Console
 import org.gradle.api.tasks.Input
@@ -24,6 +29,8 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.OrderSensitive
 import org.gradle.api.tasks.OutputDirectories
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -32,9 +39,11 @@ import spock.lang.Issue
 import spock.lang.Specification
 
 import javax.inject.Inject
+import java.util.concurrent.Callable
 
 class DefaultTaskClassInfoStoreTest extends Specification {
-    def taskClassInfoStore = new DefaultTaskClassInfoStore()
+    def classInfoStore = new DefaultClassInfoStore()
+    def taskClassInfoStore = new DefaultTaskClassInfoStore(classInfoStore)
 
     @SuppressWarnings("GrDeprecatedAPIUsage")
     private static class SimpleTask extends DefaultTask {
@@ -57,7 +66,7 @@ class DefaultTaskClassInfoStoreTest extends Specification {
         expect:
         !info.incremental
         !info.cacheable
-        info.properties.keySet().sort() == ["inputDirectory", "inputFile", "inputFiles", "inputString", "outputDirectories", "outputDirectory", "outputFile", "outputFiles"]
+        propertyNamesOf(info) == ["inputDirectory", "inputFile", "inputFiles", "inputString", "outputDirectories", "outputDirectory", "outputFile", "outputFiles"]
         info.nonAnnotatedPropertyNames.empty
     }
 
@@ -105,7 +114,7 @@ class DefaultTaskClassInfoStoreTest extends Specification {
 
         expect:
         !info.incremental
-        info.properties.keySet().sort() == ["baseValue", "nonAnnotatedBaseValue", "superclassValue", "superclassValueWithDuplicateAnnotation"]
+        propertyNamesOf(info) == ["baseValue", "nonAnnotatedBaseValue", "superclassValue", "superclassValueWithDuplicateAnnotation"]
         info.nonAnnotatedPropertyNames.empty
     }
 
@@ -126,7 +135,7 @@ class DefaultTaskClassInfoStoreTest extends Specification {
 
         expect:
         !info.incremental
-        info.properties.keySet().sort() == ["interfaceValue"]
+        propertyNamesOf(info) == ["interfaceValue"]
         info.nonAnnotatedPropertyNames.empty
     }
 
@@ -144,7 +153,7 @@ class DefaultTaskClassInfoStoreTest extends Specification {
 
         expect:
         !info.incremental
-        info.properties.keySet().empty
+        propertyNamesOf(info).empty
         info.nonAnnotatedPropertyNames.sort() == ["inputFile", "value"]
     }
 
@@ -178,6 +187,157 @@ class DefaultTaskClassInfoStoreTest extends Specification {
     def "annotation on private filed is recognized for is-getter"() {
         def info = taskClassInfoStore.getTaskClassInfo(IsGetterTask)
         expect:
-        info.properties.keySet().sort() == ["feature1"]
+        propertyNamesOf(info) == ["feature1"]
+    }
+
+    @EqualsAndHashCode
+    @ToString
+    private static class Bean {
+        @Input String name
+    }
+
+    private static class TaskWithNestedIterable extends DefaultTask {
+        @Nested(resolveCollections = true)
+        @OrderSensitive
+        List<Bean> beans = [new Bean(name: "one"), new Bean(name: "two")]
+    }
+
+    def "iterable nested property is resolved"() {
+        def info = taskClassInfoStore.getTaskClassInfo(TaskWithNestedIterable)
+        expect:
+        propertyNamesOf(info) == ["beans", "beans.name"]
+        propertyValuesOf(info) { new TaskWithNestedIterable() } == [
+            "beans": [new Bean(name: "one"), new Bean(name: "two")],
+            "beans\$1": new Bean(name: "one"),
+            "beans\$1.name": "one",
+            "beans\$2": new Bean(name: "two"),
+            "beans\$2.name": "two"
+        ]
+    }
+
+    private static class TaskWithTwiceNestedIterable extends DefaultTask {
+        @Nested(resolveCollections = true)
+        @OrderSensitive
+        List<List<Bean>> beans = [[new Bean(name: "one")], [new Bean(name: "two-a"), new Bean(name: "two-b")]]
+    }
+
+    def "twice nested iterable property is resolved"() {
+        def info = taskClassInfoStore.getTaskClassInfo(TaskWithTwiceNestedIterable)
+        expect:
+        propertyNamesOf(info) == ["beans", "beans.name"]
+        propertyValuesOf(info) { new TaskWithTwiceNestedIterable() } == [
+            "beans": [[new Bean(name: "one")], [new Bean(name: "two-a"), new Bean(name: "two-b")]],
+            "beans\$1": [new Bean(name: "one")],
+            "beans\$1\$1": new Bean(name: "one"),
+            "beans\$1\$1.name": "one",
+            "beans\$2": [new Bean(name: "two-a"), new Bean(name: "two-b")],
+            "beans\$2\$1": new Bean(name: "two-a"),
+            "beans\$2\$1.name": "two-a",
+            "beans\$2\$2": new Bean(name: "two-b"),
+            "beans\$2\$2.name": "two-b"
+        ]
+    }
+
+    private static class TaskWithNestedMap extends DefaultTask {
+        @Nested(resolveCollections = true)
+        @OrderSensitive
+        Map<String, Bean> beans = ["first": new Bean(name: "one"), "second": new Bean(name: "two")]
+    }
+
+    def "map nested property is resolved"() {
+        def info = taskClassInfoStore.getTaskClassInfo(TaskWithNestedMap)
+        expect:
+        propertyNamesOf(info) == ["beans", "beans.name"]
+        propertyValuesOf(info) { new TaskWithNestedMap() } == [
+            "beans": ["first": new Bean(name: "one"), "second": new Bean(name: "two")],
+            "beans.first": new Bean(name: "one"),
+            "beans.first.name": "one",
+            "beans.second": new Bean(name: "two"),
+            "beans.second.name": "two"
+        ]
+    }
+
+    private static class TaskWithNestedMapIterable extends DefaultTask {
+        @Nested(resolveCollections = true)
+        @OrderSensitive
+        Map<String, List<Bean>> beans = ["first": [new Bean(name: "one-a"), new Bean(name: "one-b")], "second": [new Bean(name: "two")]]
+    }
+
+    def "map iterable nested property is resolved"() {
+        def info = taskClassInfoStore.getTaskClassInfo(TaskWithNestedMapIterable)
+        expect:
+        propertyNamesOf(info) == ["beans", "beans.name"]
+        propertyValuesOf(info) { new TaskWithNestedMapIterable() } == [
+            "beans": ["first": [new Bean(name: "one-a"), new Bean(name: "one-b")], "second": [new Bean(name: "two")]],
+            "beans.first": [new Bean(name: "one-a"), new Bean(name: "one-b")],
+            "beans.first\$1": new Bean(name: "one-a"),
+            "beans.first\$1.name": "one-a",
+            "beans.first\$2": new Bean(name: "one-b"),
+            "beans.first\$2.name": "one-b",
+            "beans.second": [new Bean(name: "two")],
+            "beans.second\$1": new Bean(name: "two"),
+            "beans.second\$1.name": "two",
+        ]
+    }
+
+    @ToString
+    @EqualsAndHashCode
+    private static class RecursiveBean {
+        @Input
+        String name
+
+        @OrderSensitive
+        @Nested(resolveCollections = true)
+        List<RecursiveBean> children = [];
+
+        RecursiveBean(String name, RecursiveBean... children = []) {
+            this.name = name
+            this.children = children
+        }
+    }
+
+    private static class TaskWithRecursiveNestedIterable extends DefaultTask {
+        @Nested(resolveCollections = true)
+        @OrderSensitive
+        RecursiveBean root =
+            new RecursiveBean("root",
+                new RecursiveBean("child",
+                    new RecursiveBean("grandChild")
+                )
+            )
+    }
+
+    def "recursive iterable nested property is resolved"() {
+        def info = taskClassInfoStore.getTaskClassInfo(TaskWithRecursiveNestedIterable)
+        expect:
+        propertyNamesOf(info) == ["root", "root.children", "root.name"]
+        propertyValuesOf(info) { new TaskWithRecursiveNestedIterable() } == [
+            "root.children\$1.children\$1.children": [],
+            "root.children\$1.children\$1.name": "grandChild",
+            "root.children\$1.children\$1": new RecursiveBean("grandChild"),
+            "root.children\$1.children": [new RecursiveBean("grandChild")],
+            "root.children\$1.name": "child",
+            "root.children\$1": new RecursiveBean("child", new RecursiveBean("grandChild")),
+            "root.children": [new RecursiveBean("child", new RecursiveBean("grandChild"))],
+            "root.name": "root",
+            "root": new RecursiveBean("root", new RecursiveBean("child", new RecursiveBean("grandChild")))
+        ]
+    }
+
+    def propertyNamesOf(TaskClassInfo classInfo) {
+        def propertyNames = []
+        classInfo.visitDeclarations { String propertyName, TaskPropertyInfo property ->
+            propertyNames.add propertyName
+        }
+        return propertyNames
+    }
+
+    def propertyValuesOf(TaskClassInfo classInfo, Callable<Task> factory) {
+        def propertyValues = [:]
+        def task = AbstractTask.injectIntoNewInstance(Mock(ProjectInternal), "test", Task, factory)
+        classInfo.visitValues(task) { String propertyName, Object value, TaskPropertyInfo property ->
+            propertyValues.put propertyName, value
+        }
+        return propertyValues
     }
 }

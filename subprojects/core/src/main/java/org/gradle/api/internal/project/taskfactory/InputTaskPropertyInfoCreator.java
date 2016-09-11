@@ -21,7 +21,7 @@ import org.gradle.api.tasks.Input;
 
 import java.util.Collection;
 
-class InputTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<Input> {
+class InputTaskPropertyInfoCreator extends TaskPropertyInfoCreator<Input> {
     @Override
     public Class<Input> getAnnotationType() {
         return Input.class;
@@ -32,7 +32,7 @@ class InputTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<Input> 
         return new InputPropertyInfo(context);
     }
 
-    private static class InputPropertyInfo extends AbstractTaskPropertyInfo {
+    private static class InputPropertyInfo extends TerminalTaskPropertyInfo {
         public InputPropertyInfo(TaskPropertyInfoContext context) {
             super(context);
         }
@@ -42,7 +42,7 @@ class InputTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<Input> 
         }
 
         @Override
-        protected void processValue(TaskInternal task, String propertyName, Object value) {
+        public void process(TaskInternal task, String propertyName, Object value) {
             task.getInputs().property(propertyName, value);
         }
     }

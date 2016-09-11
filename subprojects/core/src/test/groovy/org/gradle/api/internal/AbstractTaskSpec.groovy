@@ -19,6 +19,7 @@ package org.gradle.api.internal
 import org.gradle.api.Action
 import org.gradle.api.Task
 import org.gradle.api.internal.project.taskfactory.AnnotationProcessingTaskFactory
+import org.gradle.api.internal.project.taskfactory.DefaultClassInfoStore
 import org.gradle.api.internal.project.taskfactory.DefaultTaskClassInfoStore
 import org.gradle.api.internal.project.taskfactory.TaskFactory
 import org.gradle.internal.reflect.DirectInstantiator
@@ -33,7 +34,8 @@ import static org.junit.Assert.assertTrue
 class AbstractTaskSpec extends AbstractProjectBuilderSpec {
     private DefaultServiceRegistry serviceRegistry = new DefaultServiceRegistry()
     private Instantiator instantiator = new DependencyInjectingInstantiator(serviceRegistry, new DependencyInjectingInstantiator.ConstructorCache())
-    private final AnnotationProcessingTaskFactory rootFactory = new AnnotationProcessingTaskFactory(new DefaultTaskClassInfoStore(), new TaskFactory(new AsmBackedClassGenerator()))
+    def taskClassInfoStore = new DefaultTaskClassInfoStore(new DefaultClassInfoStore())
+    private final AnnotationProcessingTaskFactory rootFactory = new AnnotationProcessingTaskFactory(taskClassInfoStore, new TaskFactory(new AsmBackedClassGenerator()))
 
     public static class TestTask extends AbstractTask {
     }

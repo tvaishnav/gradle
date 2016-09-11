@@ -16,46 +16,53 @@
 
 package org.gradle.api.internal.project.taskfactory;
 
-import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
-import org.gradle.api.internal.TaskInternal;
 import org.gradle.internal.Factory;
 
-import java.util.Collection;
+import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class TaskClassInfo {
+    private final ClassInfoStore classInfoStore;
     private final boolean incremental;
     private final boolean cacheable;
-    private final Set<String> nonAnnotatedPropertyNames;
+    private final ClassInfo classInfo;
     private final List<Factory<Action<Task>>> taskActions;
-    private final TaskPropertyInfoContainer properties;
 
-    public TaskClassInfo(boolean incremental, boolean cacheable, Set<String> nonAnnotatedPropertyNames, Map<String, TaskPropertyInfo> properties, List<Factory<Action<Task>>> taskActions) {
+    public TaskClassInfo(ClassInfoStore classInfoStore, boolean incremental, boolean cacheable, ClassInfo classInfo, List<Factory<Action<Task>>> taskActions) {
+        this.classInfoStore = classInfoStore;
         this.incremental = incremental;
         this.cacheable = cacheable;
-        this.nonAnnotatedPropertyNames = nonAnnotatedPropertyNames;
-        this.properties = new TaskPropertyInfoContainer(properties);
+        this.classInfo = classInfo;
         this.taskActions = taskActions;
     }
 
-    public boolean isIncremental() {
+    boolean isIncremental() {
         return incremental;
     }
 
-    public Set<String> getNonAnnotatedPropertyNames() {
-        return nonAnnotatedPropertyNames;
+    Set<String> getNonAnnotatedPropertyNames() {
+        final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+        builder.addAll(classInfo.getNonAnnotatedProperties());
+        Set<Type> visitedTypes = Sets.newHashSet();
+        classInfo.getProperties().visitDeclarations(classInfoStore, null, visitedTypes, new TaskPropertyDeclarationVisitor() {
+            @Override
+            public void visitDeclaration(String propertyName, TaskPropertyInfo property) {
+                builder.addAll(property.getNonAnnotatedSubProperties(propertyName, classInfoStore));
+            }
+        });
+        return builder.build();
     }
 
-    @VisibleForTesting
-    Map<String, TaskPropertyInfo> getProperties() {
-        return properties.getProperties();
+    public TaskPropertyInfoCollection getProperties() {
+        return classInfo.getProperties();
     }
 
-    public boolean isCacheable() {
+    boolean isCacheable() {
         return cacheable;
     }
 
@@ -63,21 +70,12 @@ public class TaskClassInfo {
         return taskActions;
     }
 
-    public void validateInputsAndOutputs(final TaskInternal task, final Collection<String> messages) {
-        properties.visitProperties(task, new TaskPropertyInfoContainer.TaskPropertyInfoVisitor() {
-            @Override
-            public void visit(String propertyName, TaskPropertyInfo property, Object value) {
-                property.validate(task, propertyName, value, messages);
-            }
-        });
+    public void visitValues(Task task, TaskPropertyValueVisitor visitor) {
+        classInfo.getProperties().visitValues(classInfoStore, null, task, visitor);
     }
 
-    public void processInputsAndOutputs(final TaskInternal task) {
-        properties.visitProperties(task, new TaskPropertyInfoContainer.TaskPropertyInfoVisitor() {
-            @Override
-            public void visit(String propertyName, TaskPropertyInfo property, Object value) {
-                property.process(task, propertyName, value);
-            }
-        });
+    public void visitDeclarations(TaskPropertyDeclarationVisitor visitor) {
+        Set<Type> visitedTypes = Sets.newHashSet();
+        classInfo.getProperties().visitDeclarations(classInfoStore, null, visitedTypes, visitor);
     }
 }

@@ -23,7 +23,7 @@ import org.gradle.api.tasks.InputDirectory;
 import java.io.File;
 import java.util.Collection;
 
-class InputDirectoryTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<InputDirectory> {
+class InputDirectoryTaskPropertyInfoCreator extends TaskPropertyInfoCreator<InputDirectory> {
     @Override
     public Class<InputDirectory> getAnnotationType() {
         return InputDirectory.class;
@@ -34,7 +34,7 @@ class InputDirectoryTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreato
         return new InputDirectoryPropertyInfo(context);
     }
 
-    private static class InputDirectoryPropertyInfo extends AbstractTaskPropertyInfo {
+    private static class InputDirectoryPropertyInfo extends TerminalTaskPropertyInfo {
         public InputDirectoryPropertyInfo(TaskPropertyInfoContext context) {
             super(context);
         }
@@ -50,7 +50,7 @@ class InputDirectoryTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreato
         }
 
         @Override
-        protected void processValue(TaskInternal task, String propertyName, Object value) {
+        public void process(TaskInternal task, String propertyName, Object value) {
             if (value == null) {
                 return;
             }

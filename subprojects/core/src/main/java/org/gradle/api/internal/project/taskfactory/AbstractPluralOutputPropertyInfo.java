@@ -16,19 +16,22 @@
 
 package org.gradle.api.internal.project.taskfactory;
 
+import com.google.common.reflect.TypeToken;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.gradle.api.internal.TaskInternal;
 import org.gradle.api.tasks.TaskOutputFilePropertyBuilder;
 
 import java.io.File;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Map;
 
 import static org.gradle.internal.Cast.uncheckedCast;
 
-abstract class AbstractPluralOutputPropertyInfo extends AbstractTaskPropertyInfo {
-    private final Class<?> type;
+abstract class AbstractPluralOutputPropertyInfo extends TerminalTaskPropertyInfo {
+    private static final TypeToken<Map> MAP_TYPE = TypeToken.of(Map.class);
+    private final Type type;
 
     public AbstractPluralOutputPropertyInfo(TaskPropertyInfoContext context) {
         super(context);
@@ -45,7 +48,7 @@ abstract class AbstractPluralOutputPropertyInfo extends AbstractTaskPropertyInfo
     protected abstract void doValidate(String propertyName, File file, Collection<String> messages);
 
     @Override
-    protected final void processValue(TaskInternal task, String propertyName, final Object value) {
+    public final void process(TaskInternal task, String propertyName, final Object value) {
         if (value == null) {
             return;
         }
@@ -58,7 +61,7 @@ abstract class AbstractPluralOutputPropertyInfo extends AbstractTaskPropertyInfo
                 }
             }
         });
-        if (Map.class.isAssignableFrom(type)) {
+        if (MAP_TYPE.isAssignableFrom(type)) {
             propertyBuilder = task.getOutputs().namedFiles(Map.class.cast(value));
         } else {
             propertyBuilder = task.getOutputs().files(value);

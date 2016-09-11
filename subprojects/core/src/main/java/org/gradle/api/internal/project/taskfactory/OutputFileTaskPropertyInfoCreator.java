@@ -27,7 +27,7 @@ import java.util.Collection;
 import static org.gradle.api.internal.tasks.TaskOutputsUtil.ensureParentDirectoryExists;
 import static org.gradle.api.internal.tasks.TaskOutputsUtil.validateFile;
 
-class OutputFileTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<OutputFile> {
+class OutputFileTaskPropertyInfoCreator extends TaskPropertyInfoCreator<OutputFile> {
     @Override
     public Class<OutputFile> getAnnotationType() {
         return OutputFile.class;
@@ -38,7 +38,7 @@ class OutputFileTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<Ou
         return new OutputFilePropertyInfo(context);
     }
 
-    private static class OutputFilePropertyInfo extends AbstractTaskPropertyInfo {
+    private static class OutputFilePropertyInfo extends TerminalTaskPropertyInfo {
         public OutputFilePropertyInfo(TaskPropertyInfoContext context) {
             super(context);
         }
@@ -49,7 +49,7 @@ class OutputFileTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<Ou
         }
 
         @Override
-        protected void processValue(TaskInternal task, String propertyName, Object value) {
+        public void process(TaskInternal task, String propertyName, Object value) {
             if (value == null) {
                 return;
             }

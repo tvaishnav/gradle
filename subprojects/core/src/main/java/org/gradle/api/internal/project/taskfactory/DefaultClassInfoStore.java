@@ -16,6 +16,9 @@
 
 package org.gradle.api.internal.project.taskfactory;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -47,7 +50,16 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-class TaskPropertyParserUtils {
+public class DefaultClassInfoStore implements ClassInfoStore {
+    private final LoadingCache<Class<?>, ClassInfo> cache = CacheBuilder.newBuilder()
+        .weakKeys()
+        .build(new CacheLoader<Class<?>, ClassInfo>() {
+            @Override
+            public ClassInfo load(Class<?> type) throws Exception {
+                return createClassInfo(type);
+            }
+        });
+
     // Avoid reflecting on classes we know we don't need to look at
     private static final Collection<Class<?>> IGNORED_SUPER_CLASSES = ImmutableSet.<Class<?>>of(
         ConventionTask.class, DefaultTask.class, AbstractTask.class, Task.class, Object.class, GroovyObject.class
@@ -73,7 +85,12 @@ class TaskPropertyParserUtils {
         .add(new PathSensitiveTaskPropertyAnnotationHandler())
         .build();
 
-    public static <T> void findProperties(Class<T> type, TaskPropertyInfoCollector properties) {
+    @Override
+    public ClassInfo getClassInfo(Class<?> type) {
+        return cache.getUnchecked(type);
+    }
+
+    private static <T> ClassInfo createClassInfo(Class<T> type) {
         final Map<String, TaskPropertyInfoContext> propertiesSeen = Maps.newHashMap();
         Types.walkTypeHierarchy(type, IGNORED_SUPER_CLASSES, new Types.TypeVisitor<T>() {
             @Override
@@ -110,14 +127,20 @@ class TaskPropertyParserUtils {
                 return o1.getName().compareTo(o2.getName());
             }
         });
+        ImmutableList.Builder<TaskPropertyAccessor> accessorsBuilder = ImmutableList.builder();
+        ImmutableSet.Builder<String> nonAnnotatedProperties = ImmutableSet.builder();
         for (TaskPropertyInfoContext propertyContext : sortedProperties) {
             TaskPropertyInfoCreator<?> creator = propertyContext.getPropertyCreator();
             if (creator != null) {
-                creator.createProperties(propertyContext, properties);
+                TaskPropertyInfo property = creator.createProperty(propertyContext);
+                if (property != null) {
+                    accessorsBuilder.add(new TaskPropertyAccessor(propertyContext.getName(), propertyContext.getMethod(), property));
+                }
             } else {
-                properties.recordNonAnnotatedPropertyName(propertyContext.getName());
+                nonAnnotatedProperties.add(propertyContext.getName());
             }
         }
+        return new ClassInfo(new TaskPropertyInfoCollection(accessorsBuilder.build()), nonAnnotatedProperties.build());
     }
 
     private static void handleAnnotations(TaskPropertyInfoContext context, Annotation[] annotations) {
@@ -152,7 +175,8 @@ class TaskPropertyParserUtils {
         }
 
         @Override
-        public void createProperties(TaskPropertyInfoContext context, TaskPropertyInfoCollector properties) {
+        public TaskPropertyInfo createProperty(TaskPropertyInfoContext context) {
+            return null;
         }
 
         public static <A extends Annotation> NoOpTaskPropertyInfoCreator<A> of(Class<A> annotationType) {

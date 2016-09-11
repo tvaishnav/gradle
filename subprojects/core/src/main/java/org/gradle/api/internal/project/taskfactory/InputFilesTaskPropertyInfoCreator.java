@@ -21,7 +21,7 @@ import org.gradle.api.tasks.InputFiles;
 
 import java.util.Collection;
 
-class InputFilesTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<InputFiles> {
+class InputFilesTaskPropertyInfoCreator extends TaskPropertyInfoCreator<InputFiles> {
     @Override
     public Class<InputFiles> getAnnotationType() {
         return InputFiles.class;
@@ -32,7 +32,7 @@ class InputFilesTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<In
         return new InputFilesPropertyInfo(context);
     }
 
-    private static class InputFilesPropertyInfo extends AbstractTaskPropertyInfo {
+    private static class InputFilesPropertyInfo extends TerminalTaskPropertyInfo {
         public InputFilesPropertyInfo(TaskPropertyInfoContext context) {
             super(context);
         }
@@ -42,7 +42,7 @@ class InputFilesTaskPropertyInfoCreator extends SingleTaskPropertyInfoCreator<In
         }
 
         @Override
-        protected void processValue(TaskInternal task, String propertyName, Object value) {
+        public void process(TaskInternal task, String propertyName, Object value) {
             if (value == null) {
                 return;
             }
