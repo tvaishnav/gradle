@@ -1065,6 +1065,32 @@ class CopyTaskIntegrationSpec extends AbstractIntegrationSpec {
         skippedTasks.empty
     }
 
+    def "changing case-sensitive setting in sub-spec makes task out-of-date"() {
+        given:
+        buildScript '''
+            task (copy, type:Copy) {
+               from ('src') {
+                  caseSensitive = false
+               }
+               into 'dest'
+            }
+        '''.stripIndent()
+        run 'copy'
+
+        buildScript '''
+            task (copy, type:Copy) {
+               from ('src') {
+                  caseSensitive = true
+               }
+               into 'dest'
+            }
+        '''.stripIndent()
+        when:
+        run "copy"
+        then:
+        skippedTasks.empty
+    }
+
     @NotYetImplemented
     @Issue("https://issues.gradle.org/browse/GRADLE-1276")
     def "changing expansion makes task out-of-date"() {

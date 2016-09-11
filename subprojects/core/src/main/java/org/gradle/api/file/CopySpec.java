@@ -21,6 +21,7 @@ import org.gradle.api.Incubating;
 import org.gradle.api.Nullable;
 import org.gradle.api.Transformer;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.util.PatternFilterable;
 import org.gradle.internal.HasInternalProtocol;
 
@@ -93,6 +94,7 @@ public interface CopySpec extends CopySourceSpec, CopyProcessingSpec, PatternFil
      *
      * @return true for case-sensitive matching.
      */
+    @Input
     boolean isCaseSensitive();
 
     /**
@@ -107,6 +109,7 @@ public interface CopySpec extends CopySourceSpec, CopyProcessingSpec, PatternFil
      *
      * @return <tt>true</tt> if empty target directories will be included in the copy, <tt>false</tt> otherwise
      */
+    @Input
     boolean getIncludeEmptyDirs();
 
     /**
@@ -126,6 +129,7 @@ public interface CopySpec extends CopySourceSpec, CopyProcessingSpec, PatternFil
      * @return the strategy to use for files included by this copy spec.
      * @see DuplicatesStrategy
      */
+    @Input
     @Incubating
     DuplicatesStrategy getDuplicatesStrategy();
 
@@ -382,6 +386,7 @@ public interface CopySpec extends CopySourceSpec, CopyProcessingSpec, PatternFil
      * @return the charset used to read and write files when filtering
      * @since 2.14
      */
+    @Input
     @Incubating
     String getFilteringCharset();
 

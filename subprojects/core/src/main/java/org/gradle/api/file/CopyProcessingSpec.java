@@ -19,6 +19,8 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import org.gradle.api.Action;
 import org.gradle.api.Transformer;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
 
 import java.util.regex.Pattern;
 
@@ -88,6 +90,7 @@ public interface CopyProcessingSpec extends ContentFilterable {
      *
      * @return The file permissions, or {@code null} if existing permissions should be preserved.
      */
+    @Optional @Input
     Integer getFileMode();
 
     /**
@@ -107,6 +110,7 @@ public interface CopyProcessingSpec extends ContentFilterable {
      *
      * @return The directory permissions, or {@code null} if existing permissions should be preserved.
      */
+    @Optional @Input
     Integer getDirMode();
 
     /**
