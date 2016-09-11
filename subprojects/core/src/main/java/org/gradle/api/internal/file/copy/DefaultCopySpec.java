@@ -144,6 +144,15 @@ public class DefaultCopySpec implements CopySpecInternal {
         return sourcePaths;
     }
 
+    @Override
+    public String getDestPath() {
+        return buildRootResolver().getDestPath().getPathString();
+    }
+
+    @Override
+    public FileTree getSource() {
+        return buildRootResolver().getSource();
+    }
 
     public DefaultCopySpec into(Object destDir) {
         this.destDir = destDir;

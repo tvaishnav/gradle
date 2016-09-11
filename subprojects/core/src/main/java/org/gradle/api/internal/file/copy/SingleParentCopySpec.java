@@ -16,6 +16,7 @@
 package org.gradle.api.internal.file.copy;
 
 import org.gradle.api.file.DuplicatesStrategy;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.internal.file.FileResolver;
 import org.gradle.internal.reflect.Instantiator;
 
@@ -62,5 +63,16 @@ public class SingleParentCopySpec extends DefaultCopySpec {
 
     public String getFilteringCharset() {
         return buildResolverRelativeToParent(parentResolver).getFilteringCharset();
+    }
+
+
+    @Override
+    public String getDestPath() {
+        return buildResolverRelativeToParent(parentResolver).getDestPath().getPathString();
+    }
+
+    @Override
+    public FileTree getSource() {
+        return buildResolverRelativeToParent(parentResolver).getSource();
     }
 }

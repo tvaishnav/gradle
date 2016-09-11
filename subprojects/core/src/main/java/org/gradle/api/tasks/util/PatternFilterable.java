@@ -18,6 +18,7 @@ package org.gradle.api.tasks.util;
 import groovy.lang.Closure;
 import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.Internal;
 
 import java.util.Set;
 
@@ -71,6 +72,7 @@ public interface PatternFilterable {
      *
      * @return The include patterns. Returns an empty set when there are no include patterns.
      */
+    @Internal("Represented in the resolved files")
     Set<String> getIncludes();
 
     /**
@@ -78,6 +80,7 @@ public interface PatternFilterable {
      *
      * @return The exclude patterns. Returns an empty set when there are no exclude patterns.
      */
+    @Internal("Represented in the resolved files")
     Set<String> getExcludes();
 
     /**

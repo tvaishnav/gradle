@@ -56,13 +56,13 @@ class NestedTaskPropertyInfoCreator extends TaskPropertyInfoCreator<Nested> {
         if (context.isResolveCollections()) {
             if (ITERABLE_TYPE.isAssignableFrom(type)) {
                 if (!context.isOrderSensitive()) {
-                    throw new IllegalArgumentException(String.format("Iterable task property '%s' must also be annotated with @OrderSensitive", context.getName()));
+                    throw new IllegalArgumentException(String.format("Iterable task property '%s' of %s must also be annotated with @OrderSensitive", context.getName(), type));
                 }
                 TypeToken<? extends Iterable<?>> typeToken = uncheckedCast(TypeToken.of(type));
                 Type iterableType = typeToken.getSupertype(Iterable.class).getType();
                 if (!(iterableType instanceof ParameterizedType)) {
-                    throw new IllegalArgumentException(String.format("Iterable task property '%s' must be parameterized",
-                        context.getName()));
+                    throw new IllegalArgumentException(String.format("Iterable task property '%s' of %s must be parameterized",
+                        context.getName(), type));
                 }
                 Type elementType = ((ParameterizedType) iterableType).getActualTypeArguments()[0];
                 return new IterableTaskPropertyInfo(createNestedProperty(elementType, context), optional);
@@ -70,21 +70,21 @@ class NestedTaskPropertyInfoCreator extends TaskPropertyInfoCreator<Nested> {
                 TypeToken<? extends Map> typeToken = uncheckedCast(TypeToken.of(type));
                 Type mapType = typeToken.getSupertype(Map.class).getType();
                 if (!(mapType instanceof ParameterizedType)) {
-                    throw new IllegalArgumentException(String.format("Map task property '%s' must be parameterized",
-                        context.getName()));
+                    throw new IllegalArgumentException(String.format("Map task property '%s' of %s must be parameterized",
+                        context.getName(), type));
                 }
                 Type keyType = ((ParameterizedType) mapType).getActualTypeArguments()[0];
                 if (keyType != String.class) {
-                    throw new IllegalArgumentException(String.format("Map task property '%s' key type must be String",
-                        context.getName()));
+                    throw new IllegalArgumentException(String.format("Key type of map task property '%s' of %s must be String",
+                        context.getName(), type));
                 }
                 Type valueType = ((ParameterizedType) mapType).getActualTypeArguments()[1];
                 return new MapTaskPropertyInfo(createNestedProperty(valueType, context), optional);
             }
         }
         if (!(type instanceof Class)) {
-            throw new IllegalArgumentException(String.format("Nested property '%s' must be an object type",
-                context.getName()));
+            throw new IllegalArgumentException(String.format("Nested property '%s' of type %s must be an object type",
+                context.getName(), type));
         }
         return new NestedPropertyInfo((Class<?>) type, optional);
     }

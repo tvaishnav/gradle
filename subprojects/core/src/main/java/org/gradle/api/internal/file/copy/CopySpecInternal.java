@@ -17,13 +17,32 @@ package org.gradle.api.internal.file.copy;
 
 import org.gradle.api.Action;
 import org.gradle.api.file.CopySpec;
+import org.gradle.api.file.FileTree;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OrderSensitive;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.SkipWhenEmpty;
 
 public interface CopySpecInternal extends CopySpec {
 
     //TODO - does this belong here or on the resolver? PEZ
     boolean hasSource();
 
+    @OrderSensitive
+    @Nested(resolveCollections = true)
     Iterable<CopySpecInternal> getChildren();
+
+    @Optional @Input
+    String getDestPath();
+
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @SkipWhenEmpty
+    @InputFiles
+    FileTree getSource();
 
     CopySpecInternal addChild();
 

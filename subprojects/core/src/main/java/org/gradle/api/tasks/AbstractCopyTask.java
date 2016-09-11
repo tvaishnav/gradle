@@ -99,12 +99,12 @@ public abstract class AbstractCopyTask extends ConventionTask implements CopySpe
      * Returns the source files for this task.
      * @return The source files. Never returns null.
      */
-    @InputFiles @SkipWhenEmpty @Optional
+    @Internal
     public FileCollection getSource() {
         return rootSpec.buildRootResolver().getAllSource();
     }
 
-    @Internal
+    @Nested
     public CopySpecInternal getRootSpec() {
         return rootSpec;
     }

@@ -23,6 +23,7 @@ import org.gradle.api.file.CopyProcessingSpec;
 import org.gradle.api.file.CopySpec;
 import org.gradle.api.file.DuplicatesStrategy;
 import org.gradle.api.file.FileCopyDetails;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.internal.ClosureBackedAction;
 import org.gradle.api.specs.Spec;
@@ -38,6 +39,16 @@ public abstract class DelegatingCopySpecInternal implements CopySpecInternal {
 
     public boolean hasSource() {
         return getDelegateCopySpec().hasSource();
+    }
+
+    @Override
+    public String getDestPath() {
+        return getDelegateCopySpec().getDestPath();
+    }
+
+    @Override
+    public FileTree getSource() {
+        return getDelegateCopySpec().getSource();
     }
 
     public boolean isCaseSensitive() {

@@ -804,12 +804,16 @@ public abstract class AbstractTask implements TaskInternal, DynamicObjectAware {
     public void processAnnotatedTaskInputsAndOutputs() {
         if (!annotatedInputsAndOutputsProcessed) {
             annotatedInputsAndOutputsProcessed = true;
-            taskClassInfo.visitValues(this, new TaskPropertyValueVisitor() {
-                @Override
-                public void visitValue(String propertyName, Object value, TaskPropertyInfo property) {
-                    property.process(AbstractTask.this, propertyName, value);
-                }
-            });
+            try {
+                taskClassInfo.visitValues(this, new TaskPropertyValueVisitor() {
+                    @Override
+                    public void visitValue(String propertyName, Object value, TaskPropertyInfo property) {
+                        property.process(AbstractTask.this, propertyName, value);
+                    }
+                });
+            } catch (Exception ex) {
+                throw new InvalidUserDataException(String.format("Failed to configure %s", this), ex);
+            }
         }
     }
 

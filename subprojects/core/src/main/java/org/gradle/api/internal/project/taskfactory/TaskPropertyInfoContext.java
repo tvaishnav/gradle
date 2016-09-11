@@ -95,9 +95,8 @@ class TaskPropertyInfoContext {
     }
 
     public void setPropertyCreator(TaskPropertyInfoCreator<?> propertyCreator) {
-        if (this.propertyCreator != null && !this.propertyCreator.equals(propertyCreator)) {
-            throw new IllegalStateException(String.format("Property %s declared in %s is declared both as @%s and @%s",
-                name, method.getDeclaringClass().getName(), this.propertyCreator.getAnnotationType().getSimpleName(), propertyCreator.getAnnotationType().getSimpleName()));
+        if (this.propertyCreator != null) {
+            return;
         }
         this.propertyCreator = propertyCreator;
     }
