@@ -27,6 +27,7 @@ import static spock.util.matcher.HamcrestSupport.that
 class PmdPluginTest extends AbstractProjectBuilderSpec {
 
     def setup() {
+        project.pluginManager.apply(JavaBasePlugin)
         project.pluginManager.apply(PmdPlugin)
     }
 
