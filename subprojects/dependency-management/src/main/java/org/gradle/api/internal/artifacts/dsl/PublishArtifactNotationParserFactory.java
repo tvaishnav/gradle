@@ -18,10 +18,13 @@ package org.gradle.api.internal.artifacts.dsl;
 
 import org.apache.tools.ant.Task;
 import org.gradle.api.artifacts.PublishArtifact;
+import org.gradle.api.internal.TaskInternal;
 import org.gradle.api.internal.artifacts.Module;
 import org.gradle.api.internal.artifacts.configurations.DependencyMetaDataProvider;
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact;
 import org.gradle.api.internal.artifacts.publish.DefaultPublishArtifact;
+import org.gradle.api.internal.tasks.DefaultTaskDependency;
+import org.gradle.api.tasks.TaskDependency;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 import org.gradle.internal.Factory;
 import org.gradle.internal.exceptions.DiagnosticsVisitor;
@@ -29,6 +32,7 @@ import org.gradle.internal.reflect.Instantiator;
 import org.gradle.internal.typeconversion.*;
 
 import java.io.File;
+import java.util.Date;
 
 public class PublishArtifactNotationParserFactory implements Factory<NotationParser<Object, PublishArtifact>> {
     private final Instantiator instantiator;
@@ -46,6 +50,7 @@ public class PublishArtifactNotationParserFactory implements Factory<NotationPar
                 .converter(new ArchiveTaskNotationConverter())
                 .converter(new FileMapNotationConverter(fileConverter))
                 .converter(fileConverter)
+                .converter(new TaskNotationConverter())
                 .toComposite();
     }
 
@@ -89,6 +94,60 @@ public class PublishArtifactNotationParserFactory implements Factory<NotationPar
             return instantiator.newInstance(DefaultPublishArtifact.class, artifactFile.getName(), artifactFile.getExtension(),
                                             artifactFile.getExtension() == null? "":artifactFile.getExtension(),
                                             artifactFile.getClassifier(), null, file, new Task[0]);
+        }
+    }
+
+    private class TaskNotationConverter extends TypedNotationConverter<TaskInternal.NamedOutput, PublishArtifact> {
+
+        public TaskNotationConverter() {
+            super(TaskInternal.NamedOutput.class);
+        }
+
+        @Override
+        protected PublishArtifact parseType(final TaskInternal.NamedOutput notation) {
+            return new PublishArtifact() {
+                @Override
+                public String getName() {
+                    return getFile().getName();
+                }
+
+                @Override
+                public String getExtension() {
+                    String fileName = getFile().getName();
+                    int idx = fileName.lastIndexOf(".");
+                    if (idx>0) {
+                        return fileName.substring(idx+1);
+                    }
+                    return "";
+                }
+
+                @Override
+                public String getType() {
+                    return "task output";
+                }
+
+                @Override
+                public String getClassifier() {
+                    return null;
+                }
+
+                @Override
+                public File getFile() {
+                    return notation.getFiles().getSingleFile();
+                }
+
+                @Override
+                public Date getDate() {
+                    return new Date(getFile().lastModified());
+                }
+
+                @Override
+                public TaskDependency getBuildDependencies() {
+                    DefaultTaskDependency defaultTaskDependency = new DefaultTaskDependency();
+                    defaultTaskDependency.add(notation.getTask());
+                    return defaultTaskDependency;
+                }
+            };
         }
     }
 }

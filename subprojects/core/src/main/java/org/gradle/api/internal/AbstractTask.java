@@ -793,4 +793,9 @@ public abstract class AbstractTask implements TaskInternal, DynamicObjectAware {
     public boolean isHasCustomActions() {
         return hasCustomActions;
     }
+
+    @Override
+    public NamedOutput output(String name) {
+        return new NamedOutput(this, name);
+    }
 }

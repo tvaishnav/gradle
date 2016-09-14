@@ -16,10 +16,14 @@
 
 package org.gradle.api.internal;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.tasks.ContextAwareTaskAction;
 import org.gradle.api.internal.tasks.TaskExecuter;
+import org.gradle.api.internal.tasks.TaskOutputFilePropertySpec;
 import org.gradle.api.internal.tasks.TaskStateInternal;
 import org.gradle.api.internal.tasks.execution.TaskValidator;
 import org.gradle.api.specs.Spec;
@@ -30,6 +34,7 @@ import org.gradle.util.Configurable;
 import java.io.File;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 
 public interface TaskInternal extends Task, Configurable<Task> {
 
@@ -77,4 +82,30 @@ public interface TaskInternal extends Task, Configurable<Task> {
     void appendParallelSafeAction(Action<? super Task> action);
 
     boolean isHasCustomActions();
+
+    NamedOutput output(String name);
+
+    class NamedOutput {
+        private final TaskInternal task;
+        private final String outputName;
+
+        public NamedOutput(TaskInternal task, String outputName) {
+            this.task = task;
+            this.outputName = outputName;
+        }
+
+        public FileCollection getFiles() {
+            SortedSet<TaskOutputFilePropertySpec> properties = task.getOutputs().getFileProperties();
+            return Iterables.find(properties, new Predicate<TaskOutputFilePropertySpec>() {
+                @Override
+                public boolean apply(TaskOutputFilePropertySpec input) {
+                    return input.getPropertyName().equals(outputName);
+                }
+            }).getPropertyFiles();
+        }
+
+        public TaskInternal getTask() {
+            return task;
+        }
+    }
 }

@@ -574,4 +574,44 @@ class ConfigurationAttributesResolveIntegrationTest extends AbstractIntegrationS
         failure.error.contains("default")
 
     }
+
+    def "can declare a directory as an output artifact"() {
+        given:
+        file('settings.gradle') << "include 'a', 'b'"
+        buildFile << '''
+
+            project(':a') {
+                configurations {
+                    compile
+                }
+                dependencies {
+                    compile project(path:':b', configuration:'foo')
+                }
+                task check(dependsOn: configurations.compile) << {
+                    assert configurations.compile.collect { it.name } == ['main']
+                }
+            }
+            project(':b') {
+                apply plugin: 'java'
+
+                configurations {
+                    foo
+                }
+
+                artifacts {
+                    foo compileJava.output('destinationDir')
+                }
+            }
+
+        '''
+
+
+        file('b/src/main/java/Hello.java') << 'public class Hello {}'
+
+        when:
+        run ':a:check'
+
+        then:
+        executedAndNotSkipped ':b:compileJava'
+    }
 }
