@@ -69,13 +69,11 @@ public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshott
 
     @Override
     public FileCollectionSnapshot snapshot(FileCollection input, TaskFilePropertyCompareStrategy compareStrategy, final SnapshotNormalizationStrategy snapshotNormalizationStrategy) {
-        final List<FileTreeElement> fileTreeElements = Lists.newLinkedList();
-        final List<FileTreeElement> missingFiles = Lists.newArrayList();
         FileCollectionInternal fileCollection = (FileCollectionInternal) input;
-        FileCollectionVisitorImpl visitor = new FileCollectionVisitorImpl(fileTreeElements, missingFiles);
+        final FileCollectionVisitorImpl visitor = new FileCollectionVisitorImpl(snapshotNormalizationStrategy, fileSystem, snapshotter, stringInterner, patternSetFactory);
         fileCollection.visitRootElements(visitor);
 
-        if (fileTreeElements.isEmpty() && missingFiles.isEmpty()) {
+        if (visitor.snapshots.isEmpty()) {
             return emptySnapshot();
         }
 
@@ -83,26 +81,8 @@ public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshott
 
         cacheAccess.useCache("Create file snapshot", new Runnable() {
             public void run() {
-                for (FileTreeElement fileDetails : fileTreeElements) {
-                    String absolutePath = getInternedAbsolutePath(fileDetails.getFile());
-                    if (!snapshots.containsKey(absolutePath)) {
-                        IncrementalFileSnapshot snapshot;
-                        if (fileDetails.isDirectory()) {
-                            snapshot = DirSnapshot.getInstance();
-                        } else {
-                            snapshot = new FileHashSnapshot(snapshotter.snapshot(fileDetails).getHash(), fileDetails.getLastModified());
-                        }
-                        NormalizedFileSnapshot normalizedSnapshot = snapshotNormalizationStrategy.getNormalizedSnapshot(fileDetails, snapshot, stringInterner);
-                        if (normalizedSnapshot != null) {
-                            snapshots.put(absolutePath, normalizedSnapshot);
-                        }
-                    }
-                }
-                for (FileTreeElement missingFileDetails : missingFiles) {
-                    String absolutePath = getInternedAbsolutePath(missingFileDetails.getFile());
-                    if (!snapshots.containsKey(absolutePath)) {
-                        snapshots.put(absolutePath, snapshotNormalizationStrategy.getNormalizedSnapshot(missingFileDetails, MissingFileSnapshot.getInstance(), stringInterner));
-                    }
+                for (SnapshotProducer producer : visitor.snapshots) {
+                    producer.addTo(snapshots);
                 }
             }
         });
@@ -114,30 +94,88 @@ public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshott
         return snapshot(propertySpec.getPropertyFiles(), propertySpec.getCompareStrategy(), propertySpec.getSnapshotNormalizationStrategy());
     }
 
-    private String getInternedAbsolutePath(File file) {
-        return stringInterner.intern(file.getAbsolutePath());
+    private interface SnapshotProducer {
+        void addTo(Map<String, NormalizedFileSnapshot> snapshots);
     }
 
-    private class FileCollectionVisitorImpl implements FileCollectionVisitor, FileVisitor {
-        private final List<FileTreeElement> fileTreeElements;
-        private final List<FileTreeElement> missingFiles;
+    private static class FileSnapshotProducer implements SnapshotProducer {
+        private final SnapshotNormalizationStrategy snapshotNormalizationStrategy;
+        private final StringInterner stringInterner;
+        private final FileSnapshotter snapshotter;
+        private final FileTreeElement fileDetails;
 
-        FileCollectionVisitorImpl(List<FileTreeElement> fileTreeElements, List<FileTreeElement> missingFiles) {
-            this.fileTreeElements = fileTreeElements;
-            this.missingFiles = missingFiles;
+        FileSnapshotProducer(FileTreeElement fileDetails, SnapshotNormalizationStrategy snapshotNormalizationStrategy, FileSnapshotter snapshotter, StringInterner stringInterner) {
+            this.fileDetails = fileDetails;
+            this.snapshotNormalizationStrategy = snapshotNormalizationStrategy;
+            this.snapshotter = snapshotter;
+            this.stringInterner = stringInterner;
+        }
+
+        @Override
+        public void addTo(Map<String, NormalizedFileSnapshot> snapshots) {
+            String absolutePath = stringInterner.intern(fileDetails.getFile().getAbsolutePath());
+            if (!snapshots.containsKey(absolutePath)) {
+                IncrementalFileSnapshot snapshot;
+                if (fileDetails.isDirectory()) {
+                    snapshot = DirSnapshot.getInstance();
+                } else {
+                    snapshot = new FileHashSnapshot(snapshotter.snapshot(fileDetails).getHash(), fileDetails.getLastModified());
+                }
+                NormalizedFileSnapshot normalizedSnapshot = snapshotNormalizationStrategy.getNormalizedSnapshot(fileDetails, snapshot, stringInterner);
+                if (normalizedSnapshot != null) {
+                    snapshots.put(absolutePath, normalizedSnapshot);
+                }
+            }
+        }
+    }
+
+    private static class MissingFileSnapshotProducer implements SnapshotProducer {
+        private final SnapshotNormalizationStrategy snapshotNormalizationStrategy;
+        private final StringInterner stringInterner;
+        private final File file;
+
+        MissingFileSnapshotProducer(File file, SnapshotNormalizationStrategy snapshotNormalizationStrategy, StringInterner stringInterner) {
+            this.snapshotNormalizationStrategy = snapshotNormalizationStrategy;
+            this.stringInterner = stringInterner;
+            this.file = file;
+        }
+
+        @Override
+        public void addTo(Map<String, NormalizedFileSnapshot> snapshots) {
+            String absolutePath = stringInterner.intern(file.getAbsolutePath());
+            if (!snapshots.containsKey(absolutePath)) {
+                snapshots.put(absolutePath, snapshotNormalizationStrategy.getNormalizedSnapshot(new MissingFileVisitDetails(file), MissingFileSnapshot.getInstance(), stringInterner));
+            }
+        }
+    }
+
+    private static class FileCollectionVisitorImpl implements FileCollectionVisitor, FileVisitor {
+        private final FileSystem fileSystem;
+        private final SnapshotNormalizationStrategy snapshotNormalizationStrategy;
+        private final StringInterner stringInterner;
+        private final Factory<PatternSet> patternSetFactory;
+        private final FileSnapshotter snapshotter;
+        private final List<SnapshotProducer> snapshots = Lists.newArrayList();
+
+        FileCollectionVisitorImpl(SnapshotNormalizationStrategy snapshotNormalizationStrategy, FileSystem fileSystem, FileSnapshotter snapshotter, StringInterner stringInterner, Factory<PatternSet> patternSetFactory) {
+            this.snapshotNormalizationStrategy = snapshotNormalizationStrategy;
+            this.fileSystem = fileSystem;
+            this.snapshotter = snapshotter;
+            this.stringInterner = stringInterner;
+            this.patternSetFactory = patternSetFactory;
         }
 
         @Override
         public void visitCollection(FileCollectionInternal fileCollection) {
             for (File file : fileCollection) {
                 if (file.isFile()) {
-                    fileTreeElements.add(new SingletonFileTree.SingletonFileVisitDetails(file, fileSystem, false));
+                    addFileSnapshot(new SingletonFileTree.SingletonFileVisitDetails(file, fileSystem, false));
                 } else if (file.isDirectory()) {
                     // Visit the directory itself, then its contents
-                    fileTreeElements.add(new SingletonFileTree.SingletonFileVisitDetails(file, fileSystem, true));
-                    visitDirectory(new DirectoryFileTree(file, patternSetFactory.create()));
+                    addFileSnapshot(new SingletonFileTree.SingletonFileVisitDetails(file, fileSystem, true));
+                    visitDirectoryTree(new DirectoryFileTree(file, patternSetFactory.create()));
                 } else {
-                    missingFiles.add(new MissingFileVisitDetails(file));
+                    snapshots.add(new MissingFileSnapshotProducer(file, snapshotNormalizationStrategy, stringInterner));
                 }
             }
         }
@@ -147,18 +185,23 @@ public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshott
             fileTree.visitTreeOrBackingFile(this);
         }
 
-        private void visitDirectory(DirectoryFileTree directoryFileTree) {
+        @Override
+        public void visitDirectoryTree(DirectoryFileTree directoryFileTree) {
             directoryFileTree.visit(this);
         }
 
         @Override
         public void visitDir(FileVisitDetails dirDetails) {
-            fileTreeElements.add(dirDetails);
+            addFileSnapshot(dirDetails);
         }
 
         @Override
         public void visitFile(FileVisitDetails fileDetails) {
-            fileTreeElements.add(fileDetails);
+            addFileSnapshot(fileDetails);
+        }
+
+        private void addFileSnapshot(FileVisitDetails fileVisitDetails) {
+            snapshots.add(new FileSnapshotProducer(fileVisitDetails, snapshotNormalizationStrategy, snapshotter, stringInterner));
         }
     }
 }
