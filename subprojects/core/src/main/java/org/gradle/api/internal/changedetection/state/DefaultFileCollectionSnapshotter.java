@@ -40,9 +40,9 @@ import org.gradle.internal.serialize.SerializerRegistry;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.gradle.api.internal.changedetection.state.TaskFilePropertyCompareStrategy.UNORDERED;
@@ -59,9 +59,9 @@ public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshott
     private final AtomicLong treeSnapshotCount = new AtomicLong();
     private final boolean reuseStates;
     // map from interned absolute path to known details for file
-    private final Map<String, FileState> files = new HashMap<String, FileState>();
+    private final Map<String, FileState> files = new ConcurrentHashMap<String, FileState>();
     // map from interned absolute path to known details for tree
-    private final Map<String, TreeState> trees = new HashMap<String, TreeState>();
+    private final Map<String, TreeState> trees = new ConcurrentHashMap<String, TreeState>();
 
     public DefaultFileCollectionSnapshotter(FileSnapshotter snapshotter, TaskArtifactStateCacheAccess cacheAccess, StringInterner stringInterner, FileSystem fileSystem, Factory<PatternSet> patternSetFactory) {
         this.snapshotter = snapshotter;
