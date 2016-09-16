@@ -40,6 +40,7 @@ import org.gradle.internal.serialize.SerializerRegistry;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,9 +55,13 @@ public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshott
     private final CacheAccess cacheAccess;
     private final FileSystem fileSystem;
     private final Factory<PatternSet> patternSetFactory;
+    private final AtomicLong totalFilesCount = new AtomicLong();
+    private final AtomicLong totalDirectoriesCount = new AtomicLong();
+    private final AtomicLong totalMissingCount = new AtomicLong();
     private final AtomicLong fileSnapshotCount = new AtomicLong();
     private final AtomicLong fileReuseCount = new AtomicLong();
     private final AtomicLong treeSnapshotCount = new AtomicLong();
+    private final AtomicLong treeReuseCount = new AtomicLong();
     private final boolean reuseStates;
     // map from interned absolute path to known details for file
     private final Map<String, FileState> files = new ConcurrentHashMap<String, FileState>();
@@ -79,6 +84,10 @@ public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshott
         System.out.println("root file snapshots: " + fileSnapshotCount.get());
         System.out.println("root file snapshots reused: " + fileReuseCount.get());
         System.out.println("tree snapshots: " + treeSnapshotCount.get());
+        System.out.println("tree snapshots reused: " + treeReuseCount.get());
+        System.out.println("regular files probed: " + totalFilesCount.get());
+        System.out.println("directories probed: " + totalDirectoriesCount.get());
+        System.out.println("missing files probed: " + totalMissingCount.get());
     }
 
     @Override
@@ -139,9 +148,11 @@ public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshott
     }
 
     private static class TreeState {
+        private final String path;
         private final Map<String, FileState> elements;
 
-        public TreeState(Map<String, FileState> elements) {
+        public TreeState(String path, Map<String, FileState> elements) {
+            this.path = path;
             this.elements = elements;
         }
     }
@@ -181,6 +192,38 @@ public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshott
                 if (normalizedSnapshot != null) {
                     snapshots.put(absolutePath, normalizedSnapshot);
                 }
+            }
+        }
+    }
+
+    private static class TreeSnapshotProducer implements NormalizedSnapshotProducer {
+        private final SnapshotNormalizationStrategy snapshotNormalizationStrategy;
+        private final StringInterner stringInterner;
+        private final FileSnapshotter snapshotter;
+        private final Map<String, FileState> files;
+        private final Map<String, TreeState> trees;
+        private final TreeState state;
+        private final boolean store;
+
+        TreeSnapshotProducer(TreeState state, boolean store, SnapshotNormalizationStrategy snapshotNormalizationStrategy, StringInterner stringInterner, FileSnapshotter snapshotter, Map<String, FileState> files, Map<String, TreeState> trees) {
+            this.state = state;
+            this.store = store;
+            this.snapshotNormalizationStrategy = snapshotNormalizationStrategy;
+            this.stringInterner = stringInterner;
+            this.snapshotter = snapshotter;
+            this.files = files;
+            this.trees = trees;
+        }
+
+        @Override
+        public void addTo(Map<String, NormalizedFileSnapshot> snapshots) {
+            Map<String, FileState> newEntries = store ? new LinkedHashMap<String, FileState>(state.elements) : ImmutableMap.<String, FileState>of();
+            for (FileState fileState : state.elements.values()) {
+                new FileSnapshotProducer(fileState, newEntries, snapshotNormalizationStrategy, snapshotter, stringInterner).addTo(snapshots);
+            }
+            if (store) {
+                files.putAll(newEntries);
+                trees.put(state.path, new TreeState(state.path, newEntries));
             }
         }
     }
@@ -257,11 +300,14 @@ public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshott
         private FileState calculateFileDetails(File file) {
             String path = stringInterner.intern(file.getAbsolutePath());
             if (file.isFile()) {
+                totalFilesCount.incrementAndGet();
                 return new FileState(path, FileType.File, new SingletonFileTree.SingletonFileVisitDetails(file, fileSystem, false), null);
             }
             if (file.isDirectory()) {
+                totalDirectoriesCount.incrementAndGet();
                 return new FileState(path, FileType.Directory, new SingletonFileTree.SingletonFileVisitDetails(file, fileSystem, true), DirSnapshot.getInstance());
             }
+            totalMissingCount.incrementAndGet();
             return new FileState(path, FileType.Missing, new MissingFileVisitDetails(file), MissingFileSnapshot.getInstance());
         }
 
@@ -274,16 +320,42 @@ public class DefaultFileCollectionSnapshotter implements FileCollectionSnapshott
         @Override
         public void visitDirectoryTree(DirectoryFileTree directoryFileTree) {
             treeSnapshotCount.incrementAndGet();
-            directoryFileTree.visit(this);
+            TreeState state = reuseStates ? trees.get(directoryFileTree.getDir().getAbsolutePath()) : null;
+            boolean store = false;
+            if (state == null) {
+                store = true;
+                final Map<String, FileState> files = new LinkedHashMap<String, FileState>();
+                directoryFileTree.visit(new FileVisitor() {
+                    @Override
+                    public void visitDir(FileVisitDetails dirDetails) {
+                        totalDirectoriesCount.incrementAndGet();
+                        FileState fileState = new FileState(stringInterner.intern(dirDetails.getFile().getAbsolutePath()), FileType.Directory, dirDetails, DirSnapshot.getInstance());
+                        files.put(fileState.path, fileState);
+                    }
+
+                    @Override
+                    public void visitFile(FileVisitDetails fileDetails) {
+                        totalFilesCount.incrementAndGet();
+                        FileState fileState = new FileState(stringInterner.intern(fileDetails.getFile().getAbsolutePath()), FileType.File, fileDetails, null);
+                        files.put(fileState.path, fileState);
+                    }
+                });
+                state = new TreeState(stringInterner.intern(directoryFileTree.getDir().getAbsolutePath()), files);
+            } else {
+                treeReuseCount.incrementAndGet();
+            }
+            snapshots.add(new TreeSnapshotProducer(state, store, snapshotNormalizationStrategy, stringInterner, snapshotter, files, trees));
         }
 
         @Override
         public void visitDir(FileVisitDetails dirDetails) {
+            totalDirectoriesCount.incrementAndGet();
             addFileSnapshot(new FileState(stringInterner.intern(dirDetails.getFile().getAbsolutePath()), FileType.Directory, dirDetails, DirSnapshot.getInstance()));
         }
 
         @Override
         public void visitFile(FileVisitDetails fileDetails) {
+            totalFilesCount.incrementAndGet();
             addFileSnapshot(new FileState(stringInterner.intern(fileDetails.getFile().getAbsolutePath()), FileType.File, fileDetails, null));
         }
 
